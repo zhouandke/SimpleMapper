@@ -1,6 +1,8 @@
-﻿using System;
+﻿using NJection.LambdaConverter.Fluent;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,6 +12,10 @@ namespace ZK
     {
         static void Main(string[] args)
         {
+            var lambda = Lambda.TransformMethodTo<Func<int, string>>()
+                           .From(() => Get)
+                           .ToLambda();
+
             var source = CreateSource();
             var target = ZK.SimpleMapper.Map<TargetWithPrimitiveTypes>(source);
             var s1 = Newtonsoft.Json.JsonConvert.SerializeObject(source);
@@ -19,6 +25,14 @@ namespace ZK
             {
 
             }
+        }
+
+        public static string Get(int id)
+        {
+            long longId = (long)id;
+            longId++;
+            var s= longId.ToString();
+            return s;
         }
 
         private static SourceWithPrimitiveTypes CreateSource()
