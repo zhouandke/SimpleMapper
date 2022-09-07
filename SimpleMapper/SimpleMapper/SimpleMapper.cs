@@ -1,43 +1,56 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Collections.Concurrent;
 
 namespace ZK
 {
-    public class SimpleMapper
+    public class SimpleMapper : IRootMapper
     {
-        public static void SetCustomMap<TSource, TTarget>(Func<TSource, TTarget> func)
+        public static readonly SimpleMapper Default = new SimpleMapper();
+
+        private readonly Type[] implementMapperConstructorTypes; // mapper实现类的构造器要传入的 type
+        private readonly object[] implementMapperConstructorObjects; // mapper实现类的构造器要传入的 参数
+        private readonly object[] emptyObjects;
+
+        public SimpleMapper()
         {
-            var typePair = TypePair.Create<TSource, TTarget>();
-            var typePairMapper = Container.Dicts.GetOrAdd(typePair, pair => new TypePairMapper(typeof(TSource), typeof(TTarget)));
-            Func<object, object> objFunc = src =>
-            {
-                return func((TSource)src);
-            };
-            typePairMapper.SetCustomMap(objFunc);
+            implementMapperConstructorTypes = new Type[] { typeof(IRootMapper) };
+            implementMapperConstructorObjects = new object[] { this };
+            emptyObjects = new object[0];
+            //AddBasicMaps();
         }
 
-        public static void SetPostAction<TSource, TTarget>(Action<TSource, TTarget> action)
+
+        public ConcurrentDictionary<TypePair, MapperBase> MapperBaseDicts { get; } = new ConcurrentDictionary<TypePair, MapperBase>();
+
+        public ConcurrentDictionary<TypePair, Action<object, object>> PostActionDicts { get; } = new ConcurrentDictionary<TypePair, Action<object, object>>();
+
+        public void SetCustomMap<TSource, TTarget>(Func<TSource, TTarget> func)
         {
             var typePair = TypePair.Create<TSource, TTarget>();
-            var typePairMapper = Container.Dicts.GetOrAdd(typePair, pair => new TypePairMapper(typeof(TSource), typeof(TTarget)));
-            Action<object, object> objAction = (src, dst) =>
-            {
-                action((TSource)src, (TTarget)dst);
-            };
-            typePairMapper.SetPostAction(objAction);
+            var mapper = new CustomMapper<TSource, TTarget>((source, target) => func(source), this);
+            MapperBaseDicts[typePair] = mapper;
         }
 
-        public static TTarget Map<TTarget, TSource>(TSource source)
+        public void SetCustomMap<TSource, TTarget>(Func<TSource, TTarget, TTarget> func)
+        {
+            var typePair = TypePair.Create<TSource, TTarget>();
+            var mapper = new CustomMapper<TSource, TTarget>(func, this);
+            MapperBaseDicts[typePair] = mapper;
+        }
+
+        public void SetPostAction<TSource, TTarget>(Action<TSource, TTarget> action)
+        {
+            var typePair = TypePair.Create<TSource, TTarget>();
+            PostActionDicts[typePair] = (sourcObj, targetObj) => action((TSource)sourcObj, (TTarget)targetObj);
+        }
+
+        public TTarget Map<TTarget, TSource>(TSource source)
             where TTarget : new()
         {
             return Map<TTarget>(source);
         }
 
-        public static TTarget Map<TTarget>(object source)
+        public TTarget Map<TTarget>(object source)
             where TTarget : new()
         {
             if (source == null)
@@ -45,33 +58,23 @@ namespace ZK
                 return default(TTarget);
             }
 
-            Type sourceType = source.GetType();
-            Type targetType = typeof(TTarget);
             var typePair = TypePair.Create(source.GetType(), typeof(TTarget));
-            var typePairMapper = Container.Dicts.GetOrAdd(typePair, pair => new TypePairMapper(sourceType, targetType));
+            var typePairMapper = MapperBaseDicts.GetOrAdd(typePair, pair => CreateMapper(pair));
 
             var target = new TTarget();
-            typePairMapper.Map(target, source);
+            target = (TTarget)typePairMapper.Map(source, target);
             return target;
         }
 
-        public static List<TTarget> Map<TTarget>(IEnumerable<object> sources)
-            where TTarget : new()
+        public object Map(Type sourceType, Type targetType, object source, object target = null)
         {
-            if (sources == null)
-            {
-                return null;
-            }
-
-            var list = new List<TTarget>();
-            foreach (var source in sources)
-            {
-                list.Add(Map<TTarget>(source));
-            }
-            return list;
+            var typePair = TypePair.Create(sourceType, targetType);
+            var typePairMapper = MapperBaseDicts.GetOrAdd(typePair, pair => CreateMapper(pair));
+            target = typePairMapper.Map(source, target);
+            return target;
         }
 
-        public static void Inject<TTarget, TSource>(TTarget target, TSource source)
+        public void Inject<TTarget, TSource>(TTarget target, TSource source)
         {
             if (source == null || target == null)
             {
@@ -79,234 +82,236 @@ namespace ZK
             }
 
             var typePair = TypePair.Create<TSource, TTarget>();
-            var typePairMapper = Container.Dicts.GetOrAdd(typePair, pair => new TypePairMapper(typeof(TSource), typeof(TTarget)));
+            var typePairMapper = MapperBaseDicts.GetOrAdd(typePair, pair => CreateMapper(pair));
 
-            typePairMapper.Map(target, source);
-        }
-    }
-
-
-
-    public class TypePair
-    {
-        private int? hashCode;
-
-        public TypePair(Type sourceType, Type targetType)
-        {
-            SourceType = sourceType;
-            TargetType = targetType;
+            typePairMapper.Map(source, target);
         }
 
-        public Type SourceType { get; }
-
-        public Type TargetType { get; }
-
-        public override bool Equals(object obj)
+        private MapperBase CreateMapper(TypePair typePair)
         {
-            var pair = obj as TypePair;
-            if (pair == null)
+            if (TypeHelp.IsPrimitiveNullable(typePair.SourceType, out var sourcePrimitveType)
+                && TypeHelp.IsPrimitiveNullable(typePair.TargetType, out var targetPrimitveType))
             {
-                return false;
+                var type = typeof(PrimitiveTypeMapper<,,,>).MakeGenericType(typePair.SourceType, typePair.TargetType, sourcePrimitveType, targetPrimitveType);
+                var mapper = (MapperBase)type.GetConstructor(implementMapperConstructorTypes).Invoke(implementMapperConstructorObjects);
+                return mapper;
             }
-            return SourceType == pair.SourceType && TargetType == pair.TargetType;
-        }
 
-        public override int GetHashCode()
-        {
-            if (hashCode == null)
+            if (TypeHelp.IsIEnumerableOf(typePair.SourceType) && TypeHelp.IsIEnumerableOf(typePair.TargetType))
             {
-                hashCode = SourceType.GetHashCode() & TargetType.GetHashCode();
-            }
-            return hashCode.Value;
-        }
-
-        public static TypePair Create<TTSource, TTarget>()
-        {
-            return new TypePair(typeof(TTSource), typeof(TTarget));
-        }
-
-        public static TypePair Create(Type sourceType, Type targetType)
-        {
-            return new TypePair(sourceType, targetType);
-        }
-    }
-
-
-
-    internal class TypePairMapper
-    {
-        private Func<object, object> customMap;
-        private Action<object, object> defaultMap;
-        private Action<object, object> postAction;
-
-        public TypePairMapper(Type sourceType, Type targetType)
-        {
-            TypePair = new TypePair(sourceType, targetType);
-            var sourceMembers = (TypePair.SourceType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty).Select(o => new PropertyFieldInfo(o)))
-                .Concat(TypePair.SourceType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetField).Select(o => new PropertyFieldInfo(o))).ToList();
-            var targetMembers = (TypePair.TargetType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty).Select(o => new PropertyFieldInfo(o)))
-                .Concat(TypePair.TargetType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetField).Select(o => new PropertyFieldInfo(o))).ToList();
-
-            var sameNameTypes = new List<Tuple<PropertyFieldInfo, PropertyFieldInfo>>();
-            var sameNameDifferentTypes = new List<Tuple<PropertyFieldInfo, PropertyFieldInfo>>();
-            foreach (var sourceMember in sourceMembers)
-            {
-                var targetMember = targetMembers.Find(o => o.Name == sourceMember.Name);
-                if (targetMember == null)
-                {
-                    continue;
-                }
-                if (targetMember.Type == sourceMember.Type)
-                {
-                    sameNameTypes.Add(Tuple.Create(sourceMember, targetMember));
-                }
-                else
-                {
-                    sameNameDifferentTypes.Add(Tuple.Create(sourceMember, targetMember));
-                }
-            }
-            defaultMap = ExpressionGenerator.GenerateDefaultMap(TypePair.SourceType, TypePair.TargetType, sameNameTypes);
-            SameNameSameTypes = sameNameTypes.Select(o => o.Item1.Name).ToArray();
-            SameNameDifferentTypes = sameNameDifferentTypes.Select(o => o.Item1.Name).ToArray();
-        }
-
-        public string[] SameNameSameTypes { get; }
-
-        public string[] SameNameDifferentTypes { get; }
-
-        public TypePair TypePair { get; protected set; }
-
-
-        public void SetCustomMap(Func<object, object> func)
-        {
-            this.customMap = func;
-        }
-
-        public void SetPostAction(Action<object, object> action)
-        {
-            this.postAction = action;
-        }
-
-        public virtual void Map(object target, object source)
-        {
-            if (customMap != null)
-            {
-                target = customMap(source);
+                var sourceItemType = TypeHelp.GetEnumerableItemType(typePair.SourceType);
+                var targetItemType = TypeHelp.GetEnumerableItemType(typePair.TargetType);
+                var type = typeof(EnumerableMapper<,,,>).MakeGenericType(typePair.SourceType, typePair.TargetType, sourceItemType, targetItemType);
+                var mapper = (MapperBase)type.GetConstructor(implementMapperConstructorTypes).Invoke(implementMapperConstructorObjects);
+                return mapper;
             }
             else
             {
-                if (source == null || target == null)
-                {
-                    return;
-                }
-                defaultMap(source, target);
-            }
-
-            if (postAction != null)
-            {
-                postAction(source, target);
+                var type = typeof(ClassMapper<,>).MakeGenericType(typePair.SourceType, typePair.TargetType);
+                var mapper = (MapperBase)type.GetConstructor(implementMapperConstructorTypes).Invoke(implementMapperConstructorObjects);
+                return mapper;
             }
         }
 
-        public override bool Equals(object obj)
+        private void AddBasicMaps()
         {
-            var mapper = obj as TypePairMapper;
-            if (mapper == null)
-            {
-                return false;
-            }
-            return TypePair.Equals(mapper.TypePair);
-        }
+            SetCustomMap<bool, bool>(src => src);
+            SetCustomMap<bool, char>(src => (char)(src ? 1 : 0));
+            SetCustomMap<bool, sbyte>(src => (sbyte)(src ? 1 : 0));
+            SetCustomMap<bool, byte>(src => (byte)(src ? 1 : 0));
+            SetCustomMap<bool, short>(src => (short)(src ? 1 : 0));
+            SetCustomMap<bool, ushort>(src => (ushort)(src ? 1 : 0));
+            SetCustomMap<bool, int>(src => (int)(src ? 1 : 0));
+            SetCustomMap<bool, uint>(src => (uint)(src ? 1 : 0));
+            SetCustomMap<bool, long>(src => (long)(src ? 1 : 0));
+            SetCustomMap<bool, ulong>(src => (ulong)(src ? 1 : 0));
+            SetCustomMap<bool, float>(src => (float)(src ? 1 : 0));
+            SetCustomMap<bool, double>(src => (double)(src ? 1 : 0));
+            SetCustomMap<bool, decimal>(src => (decimal)(src ? 1 : 0));
+            SetCustomMap<bool, string>(src => src.ToString());
 
-        public override int GetHashCode()
-        {
-            return TypePair.GetHashCode();
-        }
-    }
+            SetCustomMap<char, bool>(src => src != 0);
+            SetCustomMap<char, char>(src => (char)src);
+            SetCustomMap<char, sbyte>(src => (sbyte)src);
+            SetCustomMap<char, byte>(src => (byte)src);
+            SetCustomMap<char, short>(src => (short)src);
+            SetCustomMap<char, ushort>(src => (ushort)src);
+            SetCustomMap<char, int>(src => (int)src);
+            SetCustomMap<char, uint>(src => (uint)src);
+            SetCustomMap<char, long>(src => (long)src);
+            SetCustomMap<char, ulong>(src => (ulong)src);
+            SetCustomMap<char, float>(src => (float)src);
+            SetCustomMap<char, double>(src => (double)src);
+            SetCustomMap<char, decimal>(src => (decimal)src);
+            SetCustomMap<char, string>(src => src.ToString());
 
+            SetCustomMap<sbyte, bool>(src => src != 0);
+            SetCustomMap<sbyte, char>(src => (char)src);
+            SetCustomMap<sbyte, sbyte>(src => (sbyte)src);
+            SetCustomMap<sbyte, byte>(src => (byte)src);
+            SetCustomMap<sbyte, short>(src => (short)src);
+            SetCustomMap<sbyte, ushort>(src => (ushort)src);
+            SetCustomMap<sbyte, int>(src => (int)src);
+            SetCustomMap<sbyte, uint>(src => (uint)src);
+            SetCustomMap<sbyte, long>(src => (long)src);
+            SetCustomMap<sbyte, ulong>(src => (ulong)src);
+            SetCustomMap<sbyte, float>(src => (float)src);
+            SetCustomMap<sbyte, double>(src => (double)src);
+            SetCustomMap<sbyte, decimal>(src => (decimal)src);
+            SetCustomMap<sbyte, string>(src => src.ToString());
 
+            SetCustomMap<byte, bool>(src => src != 0);
+            SetCustomMap<byte, char>(src => (char)src);
+            SetCustomMap<byte, sbyte>(src => (sbyte)src);
+            SetCustomMap<byte, byte>(src => (byte)src);
+            SetCustomMap<byte, short>(src => (short)src);
+            SetCustomMap<byte, ushort>(src => (ushort)src);
+            SetCustomMap<byte, int>(src => (int)src);
+            SetCustomMap<byte, uint>(src => (uint)src);
+            SetCustomMap<byte, long>(src => (long)src);
+            SetCustomMap<byte, ulong>(src => (ulong)src);
+            SetCustomMap<byte, float>(src => (float)src);
+            SetCustomMap<byte, double>(src => (double)src);
+            SetCustomMap<byte, decimal>(src => (decimal)src);
+            SetCustomMap<byte, string>(src => src.ToString());
 
-    internal class PropertyFieldInfo
-    {
-        public PropertyFieldInfo(PropertyInfo propertyInfo)
-        {
-            PropertyInfo = propertyInfo;
-            MemberType = MemberTypes.Property;
-            Name = propertyInfo.Name;
-            Type = propertyInfo.PropertyType;
-        }
+            SetCustomMap<short, bool>(src => src != 0);
+            SetCustomMap<short, char>(src => (char)src);
+            SetCustomMap<short, sbyte>(src => (sbyte)src);
+            SetCustomMap<short, byte>(src => (byte)src);
+            SetCustomMap<short, short>(src => (short)src);
+            SetCustomMap<short, ushort>(src => (ushort)src);
+            SetCustomMap<short, int>(src => (int)src);
+            SetCustomMap<short, uint>(src => (uint)src);
+            SetCustomMap<short, long>(src => (long)src);
+            SetCustomMap<short, ulong>(src => (ulong)src);
+            SetCustomMap<short, float>(src => (float)src);
+            SetCustomMap<short, double>(src => (double)src);
+            SetCustomMap<short, decimal>(src => (decimal)src);
+            SetCustomMap<short, string>(src => src.ToString());
 
-        public PropertyFieldInfo(FieldInfo fieldInfo)
-        {
-            FieldInfo = fieldInfo;
-            MemberType = MemberTypes.Field;
-            Name = fieldInfo.Name;
-            Type = fieldInfo.FieldType;
-        }
+            SetCustomMap<ushort, bool>(src => src != 0);
+            SetCustomMap<ushort, char>(src => (char)src);
+            SetCustomMap<ushort, sbyte>(src => (sbyte)src);
+            SetCustomMap<ushort, byte>(src => (byte)src);
+            SetCustomMap<ushort, short>(src => (short)src);
+            SetCustomMap<ushort, ushort>(src => (ushort)src);
+            SetCustomMap<ushort, int>(src => (int)src);
+            SetCustomMap<ushort, uint>(src => (uint)src);
+            SetCustomMap<ushort, long>(src => (long)src);
+            SetCustomMap<ushort, ulong>(src => (ulong)src);
+            SetCustomMap<ushort, float>(src => (float)src);
+            SetCustomMap<ushort, double>(src => (double)src);
+            SetCustomMap<ushort, decimal>(src => (decimal)src);
+            SetCustomMap<ushort, string>(src => src.ToString());
 
-        public PropertyInfo PropertyInfo { get; set; }
+            SetCustomMap<int, bool>(src => src != 0);
+            SetCustomMap<int, char>(src => (char)src);
+            SetCustomMap<int, sbyte>(src => (sbyte)src);
+            SetCustomMap<int, byte>(src => (byte)src);
+            SetCustomMap<int, short>(src => (short)src);
+            SetCustomMap<int, ushort>(src => (ushort)src);
+            SetCustomMap<int, int>(src => (int)src);
+            SetCustomMap<int, uint>(src => (uint)src);
+            SetCustomMap<int, long>(src => (long)src);
+            SetCustomMap<int, ulong>(src => (ulong)src);
+            SetCustomMap<int, float>(src => (float)src);
+            SetCustomMap<int, double>(src => (double)src);
+            SetCustomMap<int, decimal>(src => (decimal)src);
+            SetCustomMap<int, string>(src => src.ToString());
 
-        public FieldInfo FieldInfo { get; set; }
+            SetCustomMap<uint, bool>(src => src != 0);
+            SetCustomMap<uint, char>(src => (char)src);
+            SetCustomMap<uint, sbyte>(src => (sbyte)src);
+            SetCustomMap<uint, byte>(src => (byte)src);
+            SetCustomMap<uint, short>(src => (short)src);
+            SetCustomMap<uint, ushort>(src => (ushort)src);
+            SetCustomMap<uint, int>(src => (int)src);
+            SetCustomMap<uint, uint>(src => (uint)src);
+            SetCustomMap<uint, long>(src => (long)src);
+            SetCustomMap<uint, ulong>(src => (ulong)src);
+            SetCustomMap<uint, float>(src => (float)src);
+            SetCustomMap<uint, double>(src => (double)src);
+            SetCustomMap<uint, decimal>(src => (decimal)src);
+            SetCustomMap<uint, string>(src => src.ToString());
 
-        public MemberTypes MemberType { get; set; }
+            SetCustomMap<long, bool>(src => src != 0);
+            SetCustomMap<long, char>(src => (char)src);
+            SetCustomMap<long, sbyte>(src => (sbyte)src);
+            SetCustomMap<long, byte>(src => (byte)src);
+            SetCustomMap<long, short>(src => (short)src);
+            SetCustomMap<long, ushort>(src => (ushort)src);
+            SetCustomMap<long, int>(src => (int)src);
+            SetCustomMap<long, uint>(src => (uint)src);
+            SetCustomMap<long, long>(src => (long)src);
+            SetCustomMap<long, ulong>(src => (ulong)src);
+            SetCustomMap<long, float>(src => (float)src);
+            SetCustomMap<long, double>(src => (double)src);
+            SetCustomMap<long, decimal>(src => (decimal)src);
+            SetCustomMap<long, string>(src => src.ToString());
 
-        public string Name { get; set; }
+            SetCustomMap<ulong, bool>(src => src != 0);
+            SetCustomMap<ulong, char>(src => (char)src);
+            SetCustomMap<ulong, sbyte>(src => (sbyte)src);
+            SetCustomMap<ulong, byte>(src => (byte)src);
+            SetCustomMap<ulong, short>(src => (short)src);
+            SetCustomMap<ulong, ushort>(src => (ushort)src);
+            SetCustomMap<ulong, int>(src => (int)src);
+            SetCustomMap<ulong, uint>(src => (uint)src);
+            SetCustomMap<ulong, long>(src => (long)src);
+            SetCustomMap<ulong, ulong>(src => (ulong)src);
+            SetCustomMap<ulong, float>(src => (float)src);
+            SetCustomMap<ulong, double>(src => (double)src);
+            SetCustomMap<ulong, decimal>(src => (decimal)src);
+            SetCustomMap<ulong, string>(src => src.ToString());
 
-        public Type Type { get; set; }
-    }
+            SetCustomMap<float, bool>(src => src != 0);
+            SetCustomMap<float, char>(src => (char)src);
+            SetCustomMap<float, sbyte>(src => (sbyte)src);
+            SetCustomMap<float, byte>(src => (byte)src);
+            SetCustomMap<float, short>(src => (short)src);
+            SetCustomMap<float, ushort>(src => (ushort)src);
+            SetCustomMap<float, int>(src => (int)src);
+            SetCustomMap<float, uint>(src => (uint)src);
+            SetCustomMap<float, long>(src => (long)src);
+            SetCustomMap<float, ulong>(src => (ulong)src);
+            SetCustomMap<float, float>(src => (float)src);
+            SetCustomMap<float, double>(src => (double)src);
+            SetCustomMap<float, decimal>(src => (decimal)src);
+            SetCustomMap<float, string>(src => src.ToString());
 
-    internal static class Container
-    {
-        public static readonly object Locker = new object();
+            SetCustomMap<double, bool>(src => src != 0);
+            SetCustomMap<double, char>(src => (char)src);
+            SetCustomMap<double, sbyte>(src => (sbyte)src);
+            SetCustomMap<double, byte>(src => (byte)src);
+            SetCustomMap<double, short>(src => (short)src);
+            SetCustomMap<double, ushort>(src => (ushort)src);
+            SetCustomMap<double, int>(src => (int)src);
+            SetCustomMap<double, uint>(src => (uint)src);
+            SetCustomMap<double, long>(src => (long)src);
+            SetCustomMap<double, ulong>(src => (ulong)src);
+            SetCustomMap<double, float>(src => (float)src);
+            SetCustomMap<double, double>(src => (double)src);
+            SetCustomMap<double, decimal>(src => (decimal)src);
+            SetCustomMap<double, string>(src => src.ToString());
 
-        public static readonly ConcurrentDictionary<TypePair, TypePairMapper> Dicts = new ConcurrentDictionary<TypePair, TypePairMapper>();
-    }
+            SetCustomMap<decimal, bool>(src => src != 0);
+            SetCustomMap<decimal, char>(src => (char)src);
+            SetCustomMap<decimal, sbyte>(src => (sbyte)src);
+            SetCustomMap<decimal, byte>(src => (byte)src);
+            SetCustomMap<decimal, short>(src => (short)src);
+            SetCustomMap<decimal, ushort>(src => (ushort)src);
+            SetCustomMap<decimal, int>(src => (int)src);
+            SetCustomMap<decimal, uint>(src => (uint)src);
+            SetCustomMap<decimal, long>(src => (long)src);
+            SetCustomMap<decimal, ulong>(src => (ulong)src);
+            SetCustomMap<decimal, float>(src => (float)src);
+            SetCustomMap<decimal, double>(src => (double)src);
+            SetCustomMap<decimal, decimal>(src => (decimal)src);
+            SetCustomMap<decimal, string>(src => src.ToString());
 
-    internal static class ExpressionGenerator
-    {
-        public static readonly Type ObjectType = typeof(object);
-
-        public static Action<object, object> GenerateDefaultMap(Type sourceType, Type targetType, List<Tuple<PropertyFieldInfo, PropertyFieldInfo>> memberTuples)
-        {
-            ParameterExpression objSrc = Expression.Parameter(ObjectType, "objSrc");
-            ParameterExpression typedSrc = Expression.Variable(sourceType, "typedSrc");
-            var srcConvert = Expression.Assign(typedSrc, Expression.Convert(objSrc, sourceType));  // Expression.Convert 强制类型转换
-
-            ParameterExpression objDst = Expression.Parameter(ObjectType, "objDst");
-            ParameterExpression typedDst = Expression.Variable(targetType, "typedDst");
-            var dstConvert = Expression.Assign(typedDst, Expression.Convert(objDst, targetType));
-
-            var binaryExpressions = new List<Expression>();
-            binaryExpressions.Add(srcConvert);
-            binaryExpressions.Add(dstConvert);
-            foreach (var memberTuple in memberTuples)
-            {
-                MemberExpression left = (memberTuple.Item2.MemberType == MemberTypes.Property) ?
-                    Expression.Property(typedDst, targetType.GetProperty(memberTuple.Item2.Name)) : Expression.Field(typedDst, targetType.GetField(memberTuple.Item2.Name));
-
-                MemberExpression right = (memberTuple.Item1.MemberType == MemberTypes.Property) ?
-                    Expression.Property(typedSrc, sourceType.GetProperty(memberTuple.Item1.Name)) : Expression.Field(typedSrc, sourceType.GetField(memberTuple.Item1.Name));
-
-                binaryExpressions.Add(Expression.Assign(left, right)); // 赋值
-            }
-            // 坑死人, 定义变量 必须再套一个 block
-            var block = Expression.Block(new[] { typedSrc, typedDst }, binaryExpressions);
-
-            return Expression.Lambda<Action<object, object>>(block, new[] { objSrc, objDst }).Compile();
-        }
-
-        public static Action<object, object> Test(Type sourceType, Type targetType, string name)
-        {
-            var t = typeof(object);
-            ParameterExpression leftBody = Expression.Parameter(t, "a");
-            ParameterExpression rightBody = Expression.Parameter(t, "b");
-            var leftP = targetType.GetProperty(name);
-            var rightP = sourceType.GetProperty(name);
-
-            var left = Expression.Property(leftBody, leftP);
-            var right = Expression.Property(rightBody, rightP);
-            var exp = Expression.Assign(left, right);
-            return Expression.Lambda<Action<object, object>>(exp, new[] { rightBody, leftBody }).Compile();
+            SetCustomMap<DateTime, string>(src => src.ToString());
+            SetCustomMap<string, DateTime>(src => { DateTime value; return DateTime.TryParse(src, out value) ? value : default(DateTime); });
         }
     }
 }

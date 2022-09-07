@@ -178,4 +178,26 @@ namespace ConsoleApp1
             return targets;
         }
     }
+
+    public class CallThis
+    {
+
+        public void Call()
+        {
+            MethodInfo methodInfo = typeof(CallThis).GetMethod("Show", new Type[] { typeof(int), typeof(int) });
+            ParameterExpression paramA = Expression.Parameter(typeof(int), "a");
+            ParameterExpression paramB = Expression.Parameter(typeof(int), "b");
+            var thisParameter = Expression.Constant(this);
+            MethodCallExpression methodCall = Expression.Call(thisParameter, methodInfo, paramA, paramB);
+            var lambda = Expression.Lambda<Action<int, int>>(methodCall, new ParameterExpression[] { paramA, paramB });
+            Action<int, int> func = lambda.Compile();
+
+            func(1, 2);
+        }
+
+        public void Show(int a, int b)
+        {
+            Console.WriteLine(a + b);
+        }
+    }
 }

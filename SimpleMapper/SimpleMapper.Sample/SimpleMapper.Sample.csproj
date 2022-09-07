@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HigLabo.Mapper" Version="5.0.0" />
+    <ProjectReference Include="..\SimpleMapper\SimpleMapper.csproj" />
   </ItemGroup>
 
 </Project>
