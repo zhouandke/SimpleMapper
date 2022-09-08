@@ -2,6 +2,9 @@
 
 namespace ZK.Mapper.Core
 {
+    /// <summary>
+    /// Mapper基础类, 派生类都必须是 《TSource, Target》的强类型
+    /// </summary>
     public abstract class MapperBase
     {
         protected MapperBase(TypePair typePair, IRootMapper rootMapper)

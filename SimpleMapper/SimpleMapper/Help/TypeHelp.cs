@@ -9,7 +9,6 @@ namespace ZK.Mapper.Help
 {
     internal static class TypeHelp
     {
-
         internal static bool IsPrimitiveNullable(Type type, out Type primitiveType)
         {
             if (type.IsPrimitive || type == typeof(decimal))

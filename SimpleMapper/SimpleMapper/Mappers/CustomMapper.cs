@@ -3,9 +3,14 @@ using ZK.Mapper.Core;
 
 namespace ZK.Mapper.Mappers
 {
+    /// <summary>
+    /// 用户自定义的映射
+    /// </summary>
+    /// <typeparam name="TSource"></typeparam>
+    /// <typeparam name="TTarget"></typeparam>
     public class CustomMapper<TSource, TTarget> : MapperBase
     {
-        private Func<TSource, TTarget, TTarget> customFunc;
+        private readonly Func<TSource, TTarget, TTarget> customFunc;
 
         public CustomMapper(Func<TSource, TTarget, TTarget> customFunc, IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)

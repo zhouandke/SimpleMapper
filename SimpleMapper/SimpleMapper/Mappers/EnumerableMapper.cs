@@ -7,6 +7,13 @@ using ZK.Mapper.Help;
 
 namespace ZK.Mapper.Mappers
 {
+    /// <summary>
+    /// 数组到数组的拷贝，暂不支持 Dictionary
+    /// </summary>
+    /// <typeparam name="TSource"></typeparam>
+    /// <typeparam name="TTarget"></typeparam>
+    /// <typeparam name="TSourceItem"></typeparam>
+    /// <typeparam name="TTargetItem"></typeparam>
     public class EnumerableMapper<TSource, TTarget, TSourceItem, TTargetItem> : MapperBase
     {
         private Type sourceItemType;

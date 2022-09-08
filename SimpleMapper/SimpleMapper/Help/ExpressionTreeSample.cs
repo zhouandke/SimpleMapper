@@ -56,6 +56,20 @@ namespace ZK.Mapper.Help
             var target = func.DynamicInvoke(src, null, convert.Compile());
         }
 
+        public static Action<object, object> Test(Type sourceType, Type targetType, string name)
+        {
+            var t = typeof(object);
+            ParameterExpression leftBody = Expression.Parameter(t, "a");
+            ParameterExpression rightBody = Expression.Parameter(t, "b");
+            var leftP = targetType.GetProperty(name);
+            var rightP = sourceType.GetProperty(name);
+
+            var left = Expression.Property(leftBody, leftP);
+            var right = Expression.Property(rightBody, rightP);
+            var exp = Expression.Assign(left, right);
+            return Expression.Lambda<Action<object, object>>(exp, new[] { rightBody, leftBody }).Compile();
+        }
+
         // 一个比较完整的例子
         private static void ExpressionTreeAccessCollection(object input)
         {

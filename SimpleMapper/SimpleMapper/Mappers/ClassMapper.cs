@@ -8,10 +8,15 @@ using ZK.Mapper.Help;
 
 namespace ZK.Mapper.Mappers
 {
+    /// <summary>
+    /// 同名同类型的属性直接拷贝，同名不同类型的属性使用IRootMapper.Map转换后赋值给 Target
+    /// </summary>
+    /// <typeparam name="TSource"></typeparam>
+    /// <typeparam name="TTarget"></typeparam>
     public class ClassMapper<TSource, TTarget> : MapperBase
     {
-        private Action<TSource, TTarget> sameNameSameTypeCopy;
-        private Action<TSource, TTarget, IRootMapper> sameNameDifferentTypeCopy;
+        private readonly Action<TSource, TTarget> sameNameSameTypeCopy;
+        private readonly Action<TSource, TTarget, IRootMapper> sameNameDifferentTypeCopy;
 
         public ClassMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)
@@ -61,10 +66,10 @@ namespace ZK.Mapper.Mappers
             {
                 return target ?? default(TTarget);
             }
-            return MapCore((TSource)source, (TTarget)target);
+            return MapCoreGeneric((TSource)source, (TTarget)target);
         }
 
-        private TTarget MapCore(TSource source, TTarget target)
+        private TTarget MapCoreGeneric(TSource source, TTarget target)
         {
             if (target == null)
             {

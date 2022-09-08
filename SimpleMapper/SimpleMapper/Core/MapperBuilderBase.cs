@@ -16,6 +16,9 @@ namespace ZK.Mapper.Core
 
         protected IRootMapper RootMapper { get; }
 
+        /// <summary>
+        /// 使用当前 Builder 的优先级, 值越大越优先使用
+        /// </summary>
         public abstract int Priority { get; }
 
         public abstract MapperBase Build(TypePair typePair);

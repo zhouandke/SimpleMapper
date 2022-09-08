@@ -4,12 +4,19 @@ using ZK.Mapper.Help;
 
 namespace ZK.Mapper.Mappers
 {
+    /// <summary>
+    /// 基本类型 + Decimal 的转换，包括 Nullable<>
+    /// </summary>
+    /// <typeparam name="TSource"></typeparam>
+    /// <typeparam name="TTarget"></typeparam>
+    /// <typeparam name="TSourcePrimitve"></typeparam>
+    /// <typeparam name="TTargetPrimitve"></typeparam>
     public class PrimitiveTypeMapper<TSource, TTarget, TSourcePrimitve, TTargetPrimitve> : MapperBase
     {
-        bool isSourceNullable;
-        bool isTargetNullable;
-        Type targetType;
-        Type targetPrimitveType;
+        private readonly bool isSourceNullable;
+        private readonly bool isTargetNullable;
+        private readonly Type targetType;
+        private readonly Type targetPrimitveType;
 
         public PrimitiveTypeMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)
