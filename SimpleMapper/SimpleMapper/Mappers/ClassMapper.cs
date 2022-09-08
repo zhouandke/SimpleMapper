@@ -66,19 +66,22 @@ namespace ZK.Mapper.Mappers
             {
                 return target ?? default(TTarget);
             }
+
+            if (target == null)
+            {
+                if (!TypePair.TargetTypeHasEmptyCtor)
+                {
+                    return target ?? default(TTarget);
+                }
+                target = TypePair.TargetEmptyCtor();
+            }
+
             return MapCoreGeneric((TSource)source, (TTarget)target);
         }
 
         private TTarget MapCoreGeneric(TSource source, TTarget target)
         {
-            if (target == null)
-            {
-                if (!TypePair.TargetTypeHasEmptyCtor)
-                {
-                    return target;
-                }
-                target = (TTarget)TypePair.TargetEmptyCtor();
-            }
+
             sameNameSameTypeCopy(source, target);
             sameNameDifferentTypeCopy(source, target, RootMapper);
             return target;

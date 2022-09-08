@@ -19,7 +19,7 @@ namespace ZK.Mapper.Help
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
                 primitiveType = type.GetGenericArguments()[0];
-                if (primitiveType.IsPrimitive || type == typeof(decimal))
+                if (primitiveType.IsPrimitive || primitiveType == typeof(decimal))
                 {
                     return true;
                 }

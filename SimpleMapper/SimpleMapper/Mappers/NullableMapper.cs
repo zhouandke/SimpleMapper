@@ -25,10 +25,8 @@ namespace ZK.Mapper.Mappers
             {
                 return target ?? default(TTarget);
             }
-            else
-            {
-                return source;
-            }
+
+            return source;
         }
     }
 

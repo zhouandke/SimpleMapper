@@ -8,7 +8,8 @@ namespace SimpleMapper.Sample
     {
         static void Main(string[] args)
         {
-
+            var p = new Point() { X = 1 };
+            Act(ref p);
 
 
             var a = new A
@@ -22,10 +23,12 @@ namespace SimpleMapper.Sample
                 Point2 = new Point() { X = 2 }
             };
 
-
-
-
             var b = ZK.Mapper.SimpleMapper.Default.Map<ADto>(a);
+        }
+
+        static void Act(ref Point point)
+        {
+            point.X = 99;
         }
 
     }

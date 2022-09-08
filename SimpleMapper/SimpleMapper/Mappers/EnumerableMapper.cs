@@ -78,7 +78,7 @@ namespace ZK.Mapper.Mappers
         private TTargetItem[] EnumerableToArray(IEnumerable<TSourceItem> sources, TTargetItem[] targets)
         {
             var count = sources.Count();
-            if (targets != null)
+            if (targets == null)
             {
                 targets = new TTargetItem[count];
             }
@@ -155,7 +155,10 @@ namespace ZK.Mapper.Mappers
             foreach (var source in sources)
             {
                 var target = RootMapper.Map(sourceItemType, targetItemType, source);
-                targets.Add((TTargetItem)target);
+                if (target != null)
+                {
+                    targets.Add((TTargetItem)target);
+                }
             }
 
             return targets;
