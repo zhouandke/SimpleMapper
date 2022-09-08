@@ -5,14 +5,14 @@ using System.Reflection;
 using System.Collections;
 using System.Collections.ObjectModel;
 
-namespace ZK
+namespace ZK.Mapper.Help
 {
     internal static class TypeHelp
     {
 
         internal static bool IsPrimitiveNullable(Type type, out Type primitiveType)
         {
-            if (type.IsPrimitive || type==typeof(decimal))
+            if (type.IsPrimitive || type == typeof(decimal))
             {
                 primitiveType = type;
                 return true;
@@ -29,6 +29,18 @@ namespace ZK
             return false;
 
         }
+
+        public static bool IsNullable(Type type, out Type underlyingType)
+        {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                underlyingType = type.GetGenericArguments()[0];
+                return true;
+            }
+            underlyingType = type;
+            return false;
+        }
+
         public static Type GetEnumerableItemType(Type type)
         {
             if (type.IsArray)

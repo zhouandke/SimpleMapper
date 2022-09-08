@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
-using ZK;
 
 namespace SimpleMapper.Sample
 {
@@ -9,10 +8,8 @@ namespace SimpleMapper.Sample
     {
         static void Main(string[] args)
         {
-            Expression<Func<float, double>> expr = o => (double)o;
 
-            var f = expr.Compile();
-            f(1f);
+
 
             var a = new A
             {
@@ -20,13 +17,15 @@ namespace SimpleMapper.Sample
                 Age = 33,
                 Height = null,
                 Weight = 62,
-                Death = true
+                Death = true,
+                Point1 = null, // new Point() { X = 1 },
+                Point2 = new Point() { X = 2 }
             };
 
 
 
 
-            var b = ZK.SimpleMapper.Default.Map<ADto>(a);
+            var b = ZK.Mapper.SimpleMapper.Default.Map<ADto>(a);
         }
 
     }
@@ -41,8 +40,13 @@ namespace SimpleMapper.Sample
 
         public float Weight { get; set; }
 
+        public decimal? Score { get; set; }
+
         public bool Death { get; set; }
 
+        public Point? Point1 { get; set; }
+
+        public Point Point2 { get; set; }
     }
 
 
@@ -52,10 +56,19 @@ namespace SimpleMapper.Sample
 
         public int? Age { get; set; }
 
-        public int Height { get; set; }
+        public float Height { get; set; }
 
         public double? Weight { get; set; }
 
+        public float Score { get; set; }
+
         public decimal Death { get; set; }
+        public Point Point1 { get; set; }
+        public Point? Point2 { get; set; }
+    }
+
+    public struct Point
+    {
+        public int X { get; set; }
     }
 }

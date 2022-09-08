@@ -2,11 +2,17 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using ZK.Mapper.Core;
 
-namespace ZK
+namespace ZK.Mapper.Help
 {
     internal static class ExpressionGenerator
     {
+        /// <summary>
+        /// 编译生成 默认构造器的创建方法, 这个比 直接代码慢一倍，但反射是直接代码的70倍时间
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public static Func<object> CreateEmptyCtor(Type type)
         {
             return Expression.Lambda<Func<object>>(Expression.New(type)).Compile();
@@ -23,10 +29,10 @@ namespace ZK
             var binaryExpressions = new List<Expression>();
             foreach (var memberTuple in memberTuples)
             {
-                MemberExpression left = (memberTuple.Item2.MemberType == MemberTypes.Property) ?
+                MemberExpression left = memberTuple.Item2.MemberType == MemberTypes.Property ?
                     Expression.Property(objDst, targetType.GetProperty(memberTuple.Item2.Name)) : Expression.Field(objDst, targetType.GetField(memberTuple.Item2.Name));
 
-                MemberExpression right = (memberTuple.Item1.MemberType == MemberTypes.Property) ?
+                MemberExpression right = memberTuple.Item1.MemberType == MemberTypes.Property ?
                     Expression.Property(objSrc, sourceType.GetProperty(memberTuple.Item1.Name)) : Expression.Field(objSrc, sourceType.GetField(memberTuple.Item1.Name));
 
                 binaryExpressions.Add(Expression.Assign(left, right)); // 赋值
@@ -38,7 +44,6 @@ namespace ZK
             var block = Expression.Block(binaryExpressions);
             return Expression.Lambda<Action<TSource, TTarget>>(block, new[] { objSrc, objDst }).Compile();
         }
-
 
         internal static Action<TSource, TTarget, IRootMapper> GenerateSameNameDifferentTypeCopy<TSource, TTarget>(List<Tuple<PropertyFieldInfo, PropertyFieldInfo>> memberTuples)
         {
@@ -55,9 +60,12 @@ namespace ZK
             var binaryExpressions = new List<Expression>();
             foreach (var memberTuple in memberTuples)
             {
-                MemberExpression left = (memberTuple.Item2.MemberType == MemberTypes.Property) ?
+                // 生成下面代码
+                // target.Point1 = (targetMemberType)rootMapper.Map(sourceMemberType, targetMemberType, (object)source.Point1, null)
+                // target.Point1 = (Point)rootMapper.Map(typeof(Point?), typeof(Point), source.Point1, null)
+                MemberExpression left = memberTuple.Item2.MemberType == MemberTypes.Property ?
                     Expression.Property(targetParam, targetType.GetProperty(memberTuple.Item2.Name)) : Expression.Field(targetParam, targetType.GetField(memberTuple.Item2.Name));
-                MemberExpression sourceMember = (memberTuple.Item1.MemberType == MemberTypes.Property) ?
+                MemberExpression sourceMember = memberTuple.Item1.MemberType == MemberTypes.Property ?
                     Expression.Property(sourceParam, sourceType.GetProperty(memberTuple.Item1.Name)) : Expression.Field(sourceParam, sourceType.GetField(memberTuple.Item1.Name));
 
                 var sourceMemberType = Expression.Constant(memberTuple.Item1.Type, typeof(Type));

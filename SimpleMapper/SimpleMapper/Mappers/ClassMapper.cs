@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using ZK.Mapper.Core;
+using ZK.Mapper.Help;
 
-namespace ZK
+namespace ZK.Mapper.Mappers
 {
     public class ClassMapper<TSource, TTarget> : MapperBase
     {
@@ -14,9 +16,9 @@ namespace ZK
         public ClassMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)
         {
-            var sourceMembers = (TypePair.SourceType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty).Select(o => new PropertyFieldInfo(o)))
+            var sourceMembers = TypePair.SourceType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty).Select(o => new PropertyFieldInfo(o))
                 .Concat(TypePair.SourceType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetField).Select(o => new PropertyFieldInfo(o))).ToList();
-            var targetMembers = (TypePair.TargetType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty).Select(o => new PropertyFieldInfo(o)))
+            var targetMembers = TypePair.TargetType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty).Select(o => new PropertyFieldInfo(o))
                 .Concat(TypePair.TargetType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetField).Select(o => new PropertyFieldInfo(o))).ToList();
 
             var sameNameSameTypes = new List<Tuple<PropertyFieldInfo, PropertyFieldInfo>>();
@@ -47,14 +49,6 @@ namespace ZK
         public string[] SameNameSameTypes { get; }
 
         public string[] SameNameDifferentTypes { get; }
-
-
-
-
-        //void SameNameDifferentTypeCopy(TSource source, TTarget target, IRootMapper rootMapper)
-        //{
-        //    target.kk = rootMapper.Map(sourceMemberType, targetMemberType, source.kk);
-        //}
 
 
         protected override object MapCore(object source, object target)
@@ -102,5 +96,19 @@ namespace ZK
     }
 
 
+    public class ClassMapperBuilder : MapperBuilderBase
+    {
+        public ClassMapperBuilder(IRootMapper rootMapper) : base(rootMapper)
+        {
+        }
 
+        public override int Priority => 0;
+
+        public override MapperBase Build(TypePair typePair)
+        {
+            var type = typeof(ClassMapper<,>).MakeGenericType(typePair.SourceType, typePair.TargetType);
+            var mapper = (MapperBase)type.GetConstructor(ImplementMapperConstructorTypes).Invoke(new object[] { RootMapper });
+            return mapper;
+        }
+    }
 }

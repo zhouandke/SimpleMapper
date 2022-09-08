@@ -4,9 +4,9 @@ using System.Linq.Expressions;
 using System.Linq;
 using System.Reflection;
 
-namespace ConsoleApp1
+namespace ZK.Mapper.Help
 {
-    class ExpressionTreeSample
+    internal class ExpressionTreeSample
     {
         static void Test(string[] args)
         {

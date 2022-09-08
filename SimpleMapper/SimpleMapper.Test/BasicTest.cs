@@ -16,7 +16,7 @@ namespace SimpleMapper.Test
                 Weight = 62,
                 Death = false
             };
-            var b = ZK.SimpleMapper.Default.Map<ADto>(a);
+            var b = ZK.Mapper.SimpleMapper.Default.Map<ADto>(a);
             Assert.AreEqual(a.Id, b.Id);
             Assert.AreEqual(a.Age, b.Age);
             Assert.AreEqual(0, b.Height);

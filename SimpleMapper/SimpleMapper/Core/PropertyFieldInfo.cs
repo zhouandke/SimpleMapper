@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace ZK
+namespace ZK.Mapper.Core
 {
     internal class PropertyFieldInfo
     {
@@ -21,14 +21,14 @@ namespace ZK
             Type = fieldInfo.FieldType;
         }
 
-        public PropertyInfo PropertyInfo { get; set; }
+        public PropertyInfo PropertyInfo { get; }
 
-        public FieldInfo FieldInfo { get; set; }
+        public FieldInfo FieldInfo { get; }
 
-        public MemberTypes MemberType { get; set; }
+        public MemberTypes MemberType { get; }
 
-        public string Name { get; set; }
+        public string Name { get; }
 
-        public Type Type { get; set; }
+        public Type Type { get; }
     }
 }

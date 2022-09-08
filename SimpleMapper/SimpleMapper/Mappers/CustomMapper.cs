@@ -1,6 +1,7 @@
 ﻿using System;
+using ZK.Mapper.Core;
 
-namespace ZK
+namespace ZK.Mapper.Mappers
 {
     public class CustomMapper<TSource, TTarget> : MapperBase
     {

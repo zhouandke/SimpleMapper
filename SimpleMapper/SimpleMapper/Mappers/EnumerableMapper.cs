@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Collections.ObjectModel;
+using ZK.Mapper.Core;
+using ZK.Mapper.Help;
 
-namespace ZK
+namespace ZK.Mapper.Mappers
 {
     public class EnumerableMapper<TSource, TTarget, TSourceItem, TTargetItem> : MapperBase
     {
@@ -160,6 +162,30 @@ namespace ZK
             EnumerableToList = 2,
             EnumerableToCollection = 3,
             EnumerableToHashSet = 4,
+        }
+    }
+
+
+    public class EnumerableMapperBuilder : MapperBuilderBase
+    {
+        public EnumerableMapperBuilder(IRootMapper rootMapper) : base(rootMapper)
+        {
+        }
+
+        public override int Priority => 500;
+
+        public override MapperBase Build(TypePair typePair)
+        {
+            if (TypeHelp.IsIEnumerableOf(typePair.SourceType) && TypeHelp.IsIEnumerableOf(typePair.TargetType))
+            {
+                var sourceItemType = TypeHelp.GetEnumerableItemType(typePair.SourceType);
+                var targetItemType = TypeHelp.GetEnumerableItemType(typePair.TargetType);
+                var type = typeof(EnumerableMapper<,,,>).MakeGenericType(typePair.SourceType, typePair.TargetType, sourceItemType, targetItemType);
+                var mapper = (MapperBase)type.GetConstructor(ImplementMapperConstructorTypes).Invoke(new object[] { RootMapper });
+                return mapper;
+            }
+
+            return null;
         }
     }
 }

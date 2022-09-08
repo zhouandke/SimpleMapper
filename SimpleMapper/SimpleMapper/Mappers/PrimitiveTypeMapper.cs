@@ -1,6 +1,8 @@
 ﻿using System;
+using ZK.Mapper.Core;
+using ZK.Mapper.Help;
 
-namespace ZK
+namespace ZK.Mapper.Mappers
 {
     public class PrimitiveTypeMapper<TSource, TTarget, TSourcePrimitve, TTargetPrimitve> : MapperBase
     {
@@ -38,6 +40,28 @@ namespace ZK
             {
                 return Convert.ChangeType(source, targetType); // Convert.ChangeType not support Nullable<>
             }
+        }
+    }
+
+    public class PrimitiveTypeMapperBuilder : MapperBuilderBase
+    {
+        public PrimitiveTypeMapperBuilder(IRootMapper rootMapper) : base(rootMapper)
+        {
+        }
+
+        public override int Priority => 1000;
+
+        public override MapperBase Build(TypePair typePair)
+        {
+            if (TypeHelp.IsPrimitiveNullable(typePair.SourceType, out var sourcePrimitveType)
+                && TypeHelp.IsPrimitiveNullable(typePair.TargetType, out var targetPrimitveType))
+            {
+                var type = typeof(PrimitiveTypeMapper<,,,>).MakeGenericType(typePair.SourceType, typePair.TargetType, sourcePrimitveType, targetPrimitveType);
+                var mapper = (MapperBase)type.GetConstructor(ImplementMapperConstructorTypes).Invoke(new object[] { RootMapper });
+                return mapper;
+            }
+
+            return null;
         }
     }
 }

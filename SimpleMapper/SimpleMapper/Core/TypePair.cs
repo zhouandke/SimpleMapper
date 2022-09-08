@@ -1,6 +1,7 @@
 ﻿using System;
+using ZK.Mapper.Help;
 
-namespace ZK
+namespace ZK.Mapper.Core
 {
     public class TypePair
     {

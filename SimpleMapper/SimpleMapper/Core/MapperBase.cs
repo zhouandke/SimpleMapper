@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ZK
+namespace ZK.Mapper.Core
 {
     public abstract class MapperBase
     {
@@ -11,6 +11,7 @@ namespace ZK
         }
 
         public TypePair TypePair { get; }
+
         public IRootMapper RootMapper { get; }
 
         public object Map(object source, object target)
