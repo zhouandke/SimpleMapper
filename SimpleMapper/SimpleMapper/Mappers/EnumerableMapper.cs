@@ -47,8 +47,9 @@ namespace ZK
             }
             if (source == null)
             {
-                return default(TTarget);
+                return target ?? default(TTarget);
             }
+
             switch (mapperType)
             {
                 case MapperType.EnumerableToArray:

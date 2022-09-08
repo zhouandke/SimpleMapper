@@ -7,6 +7,7 @@ namespace ZK
         bool isSourceNullable;
         bool isTargetNullable;
         Type targetType;
+        Type targetPrimitveType;
 
         public PrimitiveTypeMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)
@@ -14,6 +15,7 @@ namespace ZK
             isSourceNullable = TypeHelp.IsNullable(typeof(TSource));
             isTargetNullable = TypeHelp.IsNullable(typeof(TTarget));
             targetType = typeof(TTarget);
+            targetPrimitveType = typeof(TTargetPrimitve);
         }
 
         protected override object MapCore(object source, object target)
@@ -22,17 +24,20 @@ namespace ZK
             {
                 return source;
             }
-
             if (source == null)
             {
-                return default(TTarget);
-            }
-            if (isTargetNullable)
-            {
-                return (TTarget)source;
+                return target ?? default(TTarget);
             }
 
-            return Convert.ChangeType(source, targetType);
+            if (isTargetNullable)
+            {
+                // return (TTarget)source; // will throw  Unable to cast object of type 'System.Single' to type 'System.Double'.  why ?
+                return Convert.ChangeType(source, targetPrimitveType);
+            }
+            else
+            {
+                return Convert.ChangeType(source, targetType); // Convert.ChangeType not support Nullable<>
+            }
         }
     }
 }

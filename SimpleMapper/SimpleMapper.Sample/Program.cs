@@ -9,9 +9,10 @@ namespace SimpleMapper.Sample
     {
         static void Main(string[] args)
         {
-            float? f = null;
-            var dddd = (object)f;
-            double? k = (double?)f;
+            Expression<Func<float, double>> expr = o => (double)o;
+
+            var f = expr.Compile();
+            f(1f);
 
             var a = new A
             {
@@ -47,14 +48,14 @@ namespace SimpleMapper.Sample
 
     public class ADto
     {
-        //public int Id { get; set; }
+        public int Id { get; set; }
 
-        //public int? Age { get; set; }
+        public int? Age { get; set; }
 
         public int Height { get; set; }
 
-        //public double? Weight { get; set; }
+        public double? Weight { get; set; }
 
-        //public decimal Death { get; set; }
+        public decimal Death { get; set; }
     }
 }

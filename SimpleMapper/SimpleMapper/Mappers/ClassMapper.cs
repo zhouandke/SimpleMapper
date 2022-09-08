@@ -63,9 +63,9 @@ namespace ZK
             {
                 return source;
             }
-            if (true)
+            if (source == null)
             {
-
+                return target ?? default(TTarget);
             }
             return MapCore((TSource)source, (TTarget)target);
         }
