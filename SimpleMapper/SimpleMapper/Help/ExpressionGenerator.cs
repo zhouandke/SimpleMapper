@@ -29,7 +29,7 @@ namespace ZK.Mapper.Help
         {
             if (memberTuples.Count == 0)
             {
-                return (target, source) => { };
+                return (source, target) => { };
             }
 
             Type sourceType = typeof(TSource);
@@ -67,7 +67,7 @@ namespace ZK.Mapper.Help
         {
             if (memberTuples.Count == 0)
             {
-                return (target, source, rootMapper) => { };
+                return (source, target, rootMapper) => { };
             }
 
             Type sourceType = typeof(TSource);
