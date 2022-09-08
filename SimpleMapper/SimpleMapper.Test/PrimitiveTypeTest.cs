@@ -55,7 +55,7 @@ namespace SimpleMapper.Test
             //var d = (decimal?)3.9;
             //var v1 = (int)d; // 3
             //var v2 = System.Convert.ChangeType(d, typeof(int)); //4
-            Assert.AreEqual(4, dst.Scores[1]);
+            Assert.AreEqual(4, dst.Scores[2]);
 
         }
 
