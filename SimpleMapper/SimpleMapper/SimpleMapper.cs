@@ -17,6 +17,7 @@ namespace ZK.Mapper
             mapperBuilders = new MapperBuilderBase[]
             {
                 new PrimitiveTypeMapperBuilder(this),
+                new EnumMapperBuilder(this),
                 new NullableMapperBuilder(this),
                 new DictionaryMapperBuilder(this),
                 new EnumerableMapperBuilder(this),
@@ -26,7 +27,7 @@ namespace ZK.Mapper
             .OrderByDescending(o => o.Priority)
             .ToArray();
 
-            AddBasicMaps();
+            AddBasicMaps(); 
         }
 
         public ConcurrentDictionary<TypePair, MapperBase> MapperBaseDicts { get; } = new ConcurrentDictionary<TypePair, MapperBase>();
@@ -114,6 +115,7 @@ namespace ZK.Mapper
             SetCustomMap<string, bool>(src => bool.TryParse(src, out var value) ? value : default);
             SetCustomMap<string, byte>(src => byte.TryParse(src, out var value) ? value : default);
             SetCustomMap<string, sbyte>(src => sbyte.TryParse(src, out var value) ? value : default);
+            SetCustomMap<string, char>(src => char.TryParse(src, out var value) ? value : default);
             SetCustomMap<string, short>(src => short.TryParse(src, out var value) ? value : default);
             SetCustomMap<string, ushort>(src => ushort.TryParse(src, out var value) ? value : default);
             SetCustomMap<string, int>(src => int.TryParse(src, out var value) ? value : default);
@@ -129,6 +131,7 @@ namespace ZK.Mapper
             SetCustomMap<string, bool?>(src => bool.TryParse(src, out var value) ? (bool?)value : default);
             SetCustomMap<string, byte?>(src => byte.TryParse(src, out var value) ? (byte?)value : default);
             SetCustomMap<string, sbyte?>(src => sbyte.TryParse(src, out var value) ? (sbyte?)value : default);
+            SetCustomMap<string, char?>(src => char.TryParse(src, out var value) ? (char?)value : default);
             SetCustomMap<string, short?>(src => short.TryParse(src, out var value) ? (short?)value : default);
             SetCustomMap<string, ushort?>(src => ushort.TryParse(src, out var value) ? (ushort?)value : default);
             SetCustomMap<string, int?>(src => int.TryParse(src, out var value) ? (int?)value : default);

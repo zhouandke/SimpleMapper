@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using ZK.Mapper.Help;
 
 namespace ZK.Mapper.Core
@@ -6,6 +7,7 @@ namespace ZK.Mapper.Core
     /// <summary>
     /// 包含 SourceType, TargetType 信息
     /// </summary>
+    [DebuggerDisplay("SourceType={SourceType.Name}  TargetType={TargetType.Name}")]
     public class TypePair
     {
         private readonly int hashCode;

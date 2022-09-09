@@ -42,8 +42,8 @@ namespace ZK.Mapper.Help
             Type sourceType = typeof(TSource);
             Type targetType = typeof(TTarget);
 
-            ParameterExpression objSrc = Expression.Parameter(sourceType, "source");
-            ParameterExpression objDst = Expression.Parameter(targetType, "target");
+            ParameterExpression sourceParam = Expression.Parameter(sourceType, "source");
+            ParameterExpression targetParam = Expression.Parameter(targetType, "target");
 
             var binaryExpressions = new List<Expression>();
             foreach (var memberTuple in memberRelations)
@@ -51,17 +51,17 @@ namespace ZK.Mapper.Help
                 // 生成下面代码
                 // target.targetMember = source.sourceMember
                 MemberExpression left = memberTuple.TargetMember.MemberType == MemberTypes.Property ?
-                    Expression.Property(objDst, targetType.GetProperty(memberTuple.TargetMember.Name)) : Expression.Field(objDst, targetType.GetField(memberTuple.TargetMember.Name));
+                    Expression.Property(targetParam, targetType.GetProperty(memberTuple.TargetMember.Name)) : Expression.Field(targetParam, targetType.GetField(memberTuple.TargetMember.Name));
 
                 MemberExpression right = memberTuple.SourceMember.MemberType == MemberTypes.Property ?
-                    Expression.Property(objSrc, sourceType.GetProperty(memberTuple.SourceMember.Name)) : Expression.Field(objSrc, sourceType.GetField(memberTuple.SourceMember.Name));
+                    Expression.Property(sourceParam, sourceType.GetProperty(memberTuple.SourceMember.Name)) : Expression.Field(sourceParam, sourceType.GetField(memberTuple.SourceMember.Name));
 
                 binaryExpressions.Add(Expression.Assign(left, right)); // 赋值
             }
-            binaryExpressions.Add(objDst);
+            binaryExpressions.Add(targetParam);
 
             var block = Expression.Block(binaryExpressions);
-            return Expression.Lambda<Func<TSource, TTarget, TTarget>>(block, new[] { objSrc, objDst }).Compile();
+            return Expression.Lambda<Func<TSource, TTarget, TTarget>>(block, new[] { sourceParam, targetParam }).Compile();
         }
 
         /// <summary>

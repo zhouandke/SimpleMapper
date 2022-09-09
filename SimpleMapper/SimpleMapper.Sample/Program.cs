@@ -9,55 +9,40 @@ namespace SimpleMapper.Sample
     {
         static void Main(string[] args)
         {
+            UIntPtr i = (UIntPtr)1;
+            var c = (Colors)i;
+            //var a = (TypeCode?)TypeCode.Boolean;
+            var a = 3.5f;
+            //var k = (decimal)a;
+            var obj =  1L;
+            var func = BuildConvert<float, TypeCode>();
+            
+            var r=func(a);
 
-            //var aType = typeof(A);
-            //var emitFunc = Expression.Lambda<Func<object>>(Expression.New(aType)).Compile();
-
-            //var count = 1000_000;
-            //var sw = new Stopwatch();
-            //sw.Restart();
-            //for (int i = 0; i < count; i++)
+            //var from = new
             //{
-            //    var a = new A();
-            //}
-            //sw.Stop();
-            //Console.WriteLine(sw.ElapsedMilliseconds);
+            //    A = Colors.Green,
+            //    B = Colors.Red,
+            //    C = Colors.Yellow,
+            //    D = 18
 
-            //sw.Restart();
-            //for (int i = 0; i < count; i++)
-            //{
-            //    var a = emitFunc();
-            //}
-            //sw.Stop();
-            //Console.WriteLine(sw.ElapsedMilliseconds);
-
-            //sw.Restart();
-            //for (int i = 0; i < count; i++)
-            //{
-            //    var a = Activator.CreateInstance(aType);
-            //}
-            //sw.Stop();
-            //Console.WriteLine(sw.ElapsedMilliseconds);
-
-
-            var kkkk = typeof(Point).GetConstructor(Type.EmptyTypes);
-            var a1 = new[] { "1", "2" };
-            //var p = new Point() { X = 1 };
-            //Act(ref p);
-
-
-            //var a = new A
-            //{
-            //    Id = 1,
-            //    Age = 33,
-            //    Height = null,
-            //    Weight = 62,
-            //    Death = true,
-            //    Point1 = null, // new Point() { X = 1 },
-            //    Point2 = new Point() { X = 2 }
             //};
 
-            //var b = ZK.Mapper.SimpleMapper.Default.Map<ADto>(a);
+
+            //var k = (Colors)TypeCode.Decimal;
+
+
+            //var a = ZK.Mapper.SimpleMapper.Default.Map<MyClass>(from);
+        }
+
+        public static Func<TSource, TTarget> BuildConvert<TSource, TTarget>()
+        {
+            var sourceType = typeof(TSource);
+            var targetType = typeof(TTarget);
+            var sourceParam = Expression.Parameter(sourceType, "o");
+            var convertExpr = Expression.Convert(sourceParam, targetType);
+            return Expression.Lambda<Func<TSource, TTarget>>(convertExpr, new[] { sourceParam }).Compile();
+
         }
 
         static void Act(ref Point point)
@@ -65,6 +50,26 @@ namespace SimpleMapper.Sample
             point.X = 99;
         }
 
+    }
+
+    class MyClass
+    {
+        public int A { get; set; }
+
+        public int? B { get; set; }
+
+        public TypeCode C { get; set; }
+
+        public Colors D { get; set; }
+
+    }
+
+    enum Colors
+    {
+        Unknown = 0,
+        Red = 1,
+        Yellow = 2,
+        Green = 3
     }
 
     public class A

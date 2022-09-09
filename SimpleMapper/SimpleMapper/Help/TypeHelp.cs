@@ -11,7 +11,7 @@ namespace ZK.Mapper.Help
     {
         internal static bool IsPrimitiveNullable(Type type, out Type primitiveType)
         {
-            if (type.IsPrimitive || type == typeof(decimal))
+            if (type.IsPrimitive || type == typeof(decimal) || type.IsEnum)
             {
                 primitiveType = type;
                 return true;
@@ -19,14 +19,13 @@ namespace ZK.Mapper.Help
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
                 primitiveType = type.GetGenericArguments()[0];
-                if (primitiveType.IsPrimitive || primitiveType == typeof(decimal))
+                if (primitiveType.IsPrimitive || primitiveType == typeof(decimal) || type.IsEnum)
                 {
                     return true;
                 }
             }
             primitiveType = null;
             return false;
-
         }
 
         public static bool IsNullable(Type type, out Type underlyingType)
@@ -40,6 +39,64 @@ namespace ZK.Mapper.Help
             return false;
         }
 
+        public static bool IsEnum(Type type, out Type enumType)
+        {
+            if (type.IsEnum)
+            {
+                enumType = type;
+                return true;
+            }
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                enumType = type.GetGenericArguments()[0];
+                if (enumType.IsEnum)
+                {
+                    return true;
+                }
+            }
+
+            enumType = null;
+            return false;
+        }
+
+
+
+        // 
+        private static readonly Type[] numberForEnumMapSupportTypes = new Type[]
+        {
+            typeof(bool),  // Maybe one enum type contain True, False
+            typeof(byte),
+            typeof(sbyte),
+            typeof(char),  // I think it is confused that char convert to enum, but I support it
+            typeof(short),
+            typeof(ushort),
+            typeof(int),
+            typeof(uint),
+            typeof(long),
+            typeof(ulong),
+            typeof(float),
+            typeof(double),
+            typeof(decimal),
+        };
+        public static bool IsNumberForEnumMap(Type type, out Type numberType)
+        {
+            if (numberForEnumMapSupportTypes.Contains(type))
+            {
+                numberType = type;
+                return true;
+            }
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                numberType = type.GetGenericArguments()[0];
+                if (numberForEnumMapSupportTypes.Contains(numberType))
+                {
+                    return true;
+                }
+            }
+
+            numberType = null;
+            return false;
+        }
 
         public static bool IsDictionaryOf(Type type, out Type keyType, out Type valueType)
         {

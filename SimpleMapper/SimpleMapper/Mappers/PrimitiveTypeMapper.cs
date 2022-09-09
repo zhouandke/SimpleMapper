@@ -63,6 +63,12 @@ namespace ZK.Mapper.Mappers
             if (TypeHelp.IsPrimitiveNullable(typePair.SourceType, out var sourcePrimitveType)
                 && TypeHelp.IsPrimitiveNullable(typePair.TargetType, out var targetPrimitveType))
             {
+                if (sourcePrimitveType.IsEnum && targetPrimitveType.IsEnum)
+                {
+                    // Convert.ChangeType 不能处理都是 enum 的情况
+                    return null;
+                }
+
                 var type = typeof(PrimitiveTypeMapper<,,,>).MakeGenericType(typePair.SourceType, typePair.TargetType, sourcePrimitveType, targetPrimitveType);
                 var mapper = (MapperBase)type.GetConstructor(ImplementMapperConstructorTypes).Invoke(new object[] { RootMapper });
                 return mapper;
