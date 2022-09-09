@@ -2,13 +2,13 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SimpleMapper.Test
 {
-    // “¿¿µ
+    // denpend on BasicTest
     [TestClass]
-    public class ClassTest
+    public class ClassMapperTest
     {
         ZK.Mapper.SimpleMapper simpleMapper = new ZK.Mapper.SimpleMapper();
 
-        public ClassTest()
+        public ClassMapperTest()
         {
 
         }

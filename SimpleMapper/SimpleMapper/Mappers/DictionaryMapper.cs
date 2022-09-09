@@ -16,23 +16,19 @@ namespace ZK.Mapper.Mappers
     /// <typeparam name="TSourceValueType"></typeparam>
     /// <typeparam name="TTargetKeyType"></typeparam>
     /// <typeparam name="TTargetValueType"></typeparam>
-    public class DictionaryMapper<TSource, TTarget, TSourceKeyType, TSourceValueType, TTargetKeyType, TTargetValueType> : MapperBase
+    internal class DictionaryMapper<TSource, TTarget, TSourceKeyType, TSourceValueType, TTargetKeyType, TTargetValueType> : MapperBase
         where TSource : IDictionary<TSourceKeyType, TSourceValueType>
         where TTarget : IDictionary<TTargetKeyType, TTargetValueType>
         where TSourceKeyType : TTargetKeyType
     {
-        private Type sourceKeyType;
-        private Type sourceValueType;
-        private Type targetKeyType;
-        private Type targetValueType;
+        private static readonly Type sourceKeyType = typeof(TSourceKeyType);
+        private static readonly Type sourceValueType = typeof(TSourceValueType);
+        private static readonly Type targetKeyType = typeof(TTargetKeyType);
+        private static readonly Type targetValueType = typeof(TTargetValueType);
 
         public DictionaryMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)
         {
-            sourceKeyType = typeof(TSourceKeyType);
-            sourceValueType = typeof(TSourceValueType);
-            targetKeyType = typeof(TTargetKeyType);
-            targetValueType = typeof(TTargetValueType);
         }
 
         protected override object MapCore(object source, object target)
@@ -82,8 +78,8 @@ namespace ZK.Mapper.Mappers
 
         public override MapperBase Build(TypePair typePair)
         {
-            if (TypeHelp.IsDictionaryOf(typePair.SourceType, out var sourceKeyType, out var sourceValueType)
-                && TypeHelp.IsDictionaryOf(typePair.TargetType, out var targetKeyType, out var targetValueType))
+            if (TypeHelp.IsDictionary(typePair.SourceType, out var sourceKeyType, out var sourceValueType)
+                && TypeHelp.IsDictionary(typePair.TargetType, out var targetKeyType, out var targetValueType))
             {
                 // Key 必须一样
                 if (sourceKeyType == targetKeyType)

@@ -17,14 +17,14 @@ namespace ZK.Mapper.Core
 
         public IRootMapper RootMapper { get; }
 
-        public object Map(object source,object target)
+        public object Map(object source, object target)
         {
             target = MapCore(source, target);
 
             Func<object, object, object> postFunc;
             if (RootMapper.PostActionDicts.TryGetValue(TypePair, out postFunc))
             {
-                target= postFunc(source, target);
+                target = postFunc(source, target);
             }
             return target;
         }

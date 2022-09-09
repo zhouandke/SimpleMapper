@@ -7,24 +7,24 @@ using System.Collections.ObjectModel;
 
 namespace ZK.Mapper.Help
 {
-    internal static class TypeHelp
+    public static class TypeHelp
     {
-        internal static bool IsPrimitiveNullable(Type type, out Type primitiveType)
+        internal static bool IsNumberForEnumMap(Type type, out Type numberType)
         {
-            if (type.IsPrimitive || type == typeof(decimal) || type.IsEnum)
+            if (type.IsPrimitive || type == typeof(decimal))
             {
-                primitiveType = type;
+                numberType = type;
                 return true;
             }
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
-                primitiveType = type.GetGenericArguments()[0];
-                if (primitiveType.IsPrimitive || primitiveType == typeof(decimal) || type.IsEnum)
+                numberType = type.GetGenericArguments()[0];
+                if (numberType.IsPrimitive || numberType == typeof(decimal))
                 {
                     return true;
                 }
             }
-            primitiveType = null;
+            numberType = null;
             return false;
         }
 
@@ -59,46 +59,25 @@ namespace ZK.Mapper.Help
             return false;
         }
 
-
-
-        // 
-        private static readonly Type[] numberForEnumMapSupportTypes = new Type[]
+        public static bool IsEnumerable(Type type, out Type itemType)
         {
-            typeof(bool),  // Maybe one enum type contain True, False
-            typeof(byte),
-            typeof(sbyte),
-            typeof(char),  // I think it is confused that char convert to enum, but I support it
-            typeof(short),
-            typeof(ushort),
-            typeof(int),
-            typeof(uint),
-            typeof(long),
-            typeof(ulong),
-            typeof(float),
-            typeof(double),
-            typeof(decimal),
-        };
-        public static bool IsNumberForEnumMap(Type type, out Type numberType)
-        {
-            if (numberForEnumMapSupportTypes.Contains(type))
+            if (type.IsArray)
             {
-                numberType = type;
+                itemType = type.GetElementType();
                 return true;
             }
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+            if (IsGenericType(type) && IsIEnumerableOf(type))
             {
-                numberType = type.GetGenericArguments()[0];
-                if (numberForEnumMapSupportTypes.Contains(numberType))
-                {
-                    return true;
-                }
+                itemType = type.GetGenericArguments()[0];
+                return true;
             }
 
-            numberType = null;
+            itemType = null;
             return false;
         }
 
-        public static bool IsDictionaryOf(Type type, out Type keyType, out Type valueType)
+
+        public static bool IsDictionary(Type type, out Type keyType, out Type valueType)
         {
             if (IsGenericType(type) &&
                    (type.GetGenericTypeDefinition() == typeof(Dictionary<,>) ||
@@ -117,52 +96,24 @@ namespace ZK.Mapper.Help
             }
         }
 
-        public static Type GetEnumerableItemType(Type type)
-        {
-            if (type.IsArray)
-            {
-                return type.GetElementType();
-            }
-            if (IsGenericType(type) && IsIEnumerableOf(type))
-            {
-                return type.GetGenericArguments().First();
-            }
-
-            return typeof(object);
-        }
-
-        public static ConstructorInfo GetDefaultCtor(Type type)
-        {
-            return type.GetConstructor(Type.EmptyTypes);
-        }
-
-        public static KeyValuePair<Type, Type> GetDictionaryItemTypes(Type type)
-        {
-            if (IsDictionaryOf(type))
-            {
-                Type[] types = type.GetGenericArguments();
-                return new KeyValuePair<Type, Type>(types[0], types[1]);
-            }
-            throw new NotSupportedException();
-        }
-
-        public static MethodInfo GetGenericMethod(Type type, string methodName, params Type[] arguments)
-        {
-            return type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic)
-                       .MakeGenericMethod(arguments);
-        }
-
         public static bool HasParameterlessCtor(Type type)
         {
             return type.GetConstructor(Type.EmptyTypes) != null
                 || type.IsValueType; // 值类型 GetConstructor(Type.EmptyTypes) 始终是 null, 但值类型绝对有 无参构造函数
         }
 
-        public static bool IsDictionaryOf(Type type)
+
+
+        public static ConstructorInfo GetDefaultCtor(Type type)
         {
-            return IsGenericType(type) &&
-                   (type.GetGenericTypeDefinition() == typeof(Dictionary<,>) ||
-                    type.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+            return type.GetConstructor(Type.EmptyTypes);
+        }
+
+
+        public static MethodInfo GetGenericMethod(Type type, string methodName, params Type[] arguments)
+        {
+            return type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic)
+                       .MakeGenericMethod(arguments);
         }
 
         public static bool IsIEnumerable(Type type)

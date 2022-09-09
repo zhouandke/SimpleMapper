@@ -70,6 +70,15 @@ namespace ZK.Mapper.Help
             return Expression.Lambda<Action<object, object>>(exp, new[] { rightBody, leftBody }).Compile();
         }
 
+        public static Func<TSource, TTarget> BuildConvert<TSource, TTarget>()
+        {
+            var sourceType = typeof(TSource);
+            var targetType = typeof(TTarget);
+            var sourceParam = Expression.Parameter(sourceType, "o");
+            var convertExpr = Expression.Convert(sourceParam, targetType);
+            return Expression.Lambda<Func<TSource, TTarget>>(convertExpr, new[] { sourceParam }).Compile();
+        }
+
         // 一个比较完整的例子
         private static void ExpressionTreeAccessCollection(object input)
         {
@@ -195,7 +204,6 @@ namespace ZK.Mapper.Help
 
     public class CallThis
     {
-
         public void Call()
         {
             MethodInfo methodInfo = typeof(CallThis).GetMethod("Show", new Type[] { typeof(int), typeof(int) });

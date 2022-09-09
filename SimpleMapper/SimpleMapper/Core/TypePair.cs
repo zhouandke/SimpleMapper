@@ -5,13 +5,13 @@ using ZK.Mapper.Help;
 namespace ZK.Mapper.Core
 {
     /// <summary>
-    /// 包含 SourceType, TargetType 信息
+    /// Include SourceType, TargetType Info
     /// </summary>
     [DebuggerDisplay("SourceType={SourceType.Name}  TargetType={TargetType.Name}")]
     public class TypePair
     {
         private readonly int hashCode;
-        private Func<object> targetEmptyCtor;
+        private Func<object> targetParameterlessCtor;
 
         public TypePair(Type sourceType, Type targetType)
         {
@@ -35,11 +35,11 @@ namespace ZK.Mapper.Core
                 {
                     return null;
                 }
-                if (targetEmptyCtor == null)
+                if (targetParameterlessCtor == null)
                 {
-                    targetEmptyCtor = ExpressionGenerator.CreateEmptyCtor(TargetType);
+                    targetParameterlessCtor = ExpressionGenerator.CreateParameterlessCtor(TargetType);
                 }
-                return targetEmptyCtor;
+                return targetParameterlessCtor;
             }
         }
 
@@ -57,6 +57,7 @@ namespace ZK.Mapper.Core
         {
             return hashCode;
         }
+
 
         public static TypePair Create<TTSource, TTarget>()
         {

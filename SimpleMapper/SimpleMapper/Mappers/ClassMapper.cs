@@ -13,7 +13,7 @@ namespace ZK.Mapper.Mappers
     /// </summary>
     /// <typeparam name="TSource"></typeparam>
     /// <typeparam name="TTarget"></typeparam>
-    public class ClassMapper<TSource, TTarget> : MapperBase
+    internal class ClassMapper<TSource, TTarget> : MapperBase
     {
         private readonly Func<TSource, TTarget, TTarget> sameNameSameTypeCopy;
         private readonly Func<TSource, TTarget, IRootMapper, TTarget> sameNameDifferentTypeCopy;
@@ -21,13 +21,13 @@ namespace ZK.Mapper.Mappers
         public ClassMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)
         {
-            var sourceMembers = TypePair.SourceType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty).Where(o => o.CanRead).Select(o => new PropertyFieldInfo(o))
-                .Concat(TypePair.SourceType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetField).Select(o => new PropertyFieldInfo(o))).ToList();
-            var targetMembers = TypePair.TargetType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty).Where(o => o.CanWrite).Select(o => new PropertyFieldInfo(o))
-                .Concat(TypePair.TargetType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetField).Select(o => new PropertyFieldInfo(o))).ToList();
+            var sourceMembers = TypePair.SourceType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty).Where(o => o.CanRead).Select(o => new SourceTargetMemberInfo(o))
+                .Concat(TypePair.SourceType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetField).Select(o => new SourceTargetMemberInfo(o))).ToList();
+            var targetMembers = TypePair.TargetType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty).Where(o => o.CanWrite).Select(o => new SourceTargetMemberInfo(o))
+                .Concat(TypePair.TargetType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetField).Select(o => new SourceTargetMemberInfo(o))).ToList();
 
-            var sameNameSameTypes = new List<SourceTargetMemberRelation>();
-            var sameNameDifferentTypes = new List<SourceTargetMemberRelation>();
+            var sameNameSameTypes = new List<SourceTargetMemberPair>();
+            var sameNameDifferentTypes = new List<SourceTargetMemberPair>();
             foreach (var sourceMember in sourceMembers)
             {
                 var targetMember = targetMembers.Find(o => o.Name == sourceMember.Name);
@@ -37,11 +37,11 @@ namespace ZK.Mapper.Mappers
                 }
                 if (targetMember.Type == sourceMember.Type)
                 {
-                    sameNameSameTypes.Add(new SourceTargetMemberRelation(sourceMember, targetMember));
+                    sameNameSameTypes.Add(new SourceTargetMemberPair(sourceMember, targetMember));
                 }
                 else
                 {
-                    sameNameDifferentTypes.Add(new SourceTargetMemberRelation(sourceMember, targetMember));
+                    sameNameDifferentTypes.Add(new SourceTargetMemberPair(sourceMember, targetMember));
                 }
             }
             sameNameSameTypeCopy = ExpressionGenerator.GenerateSameNameSameTypeCopy<TSource, TTarget>(sameNameSameTypes);
@@ -84,21 +84,6 @@ namespace ZK.Mapper.Mappers
             target = sameNameSameTypeCopy(source, target);
             target = sameNameDifferentTypeCopy(source, target, RootMapper);
             return target;
-        }
-
-        public override int GetHashCode()
-        {
-            return TypePair.GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            var another = obj as ClassMapper<TSource, TTarget>;
-            if (another == null)
-            {
-                return false;
-            }
-            return TypePair.Equals(another.TypePair);
         }
     }
 

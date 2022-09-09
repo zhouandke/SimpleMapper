@@ -4,19 +4,18 @@ using System.Collections.ObjectModel;
 
 namespace SimpleMapper.Test
 {
-    /// <summary>
-    /// 包括 CustomMap  InjectFrom  PostAction 
-    /// </summary>
+    // depend none
     [TestClass]
     public class BasicTest
     {
         ZK.Mapper.SimpleMapper simpleMapper = new ZK.Mapper.SimpleMapper();
 
-
         [TestMethod]
-        public void Test()
+        public void CustomMapAndInjectFromTest()
         {
+#pragma warning disable CS0618 // 类型或成员已过时
             simpleMapper.SetCustomMap<int, Point>(intValue => new Point() { X = intValue });
+#pragma warning restore CS0618 // 类型或成员已过时
 
             var dst = simpleMapper.Map<Point>(2);
             Assert.AreEqual(2, dst.X);
@@ -39,9 +38,12 @@ namespace SimpleMapper.Test
             location = new Location { X = 10 };
             location = simpleMapper.InjectFrom(location, 2);
             Assert.AreEqual(12, location.X);
+        }
 
-
-
+        [TestMethod]
+        public void PostActionTest()
+        {
+            simpleMapper.SetCustomMap<int, Point>((intValue, _) => new Point() { X = intValue });
             simpleMapper.SetPostAction<int, Point>((intValue, point) =>
             {
                 if (intValue > 0)
@@ -54,7 +56,7 @@ namespace SimpleMapper.Test
                 }
                 return point;
             });
-            dst = simpleMapper.Map<Point>(2);
+            var dst = simpleMapper.Map<Point>(2);
             Assert.AreEqual(10002, dst.X);
             dst = simpleMapper.Map<Point>(-2);
             Assert.AreEqual(-10002, dst.X);

@@ -16,16 +16,14 @@ namespace ZK.Mapper.Mappers
     /// <typeparam name="TTargetItem"></typeparam>
     public class EnumerableMapper<TSource, TTarget, TSourceItem, TTargetItem> : MapperBase
     {
-        private Type sourceItemType;
-        private Type targetItemType;
-        private MapperType mapperType;
+        private static readonly Type sourceItemType = typeof(TSourceItem);
+        private static readonly Type targetItemType = typeof(TTargetItem);
 
+        private MapperType mapperType;
 
         public EnumerableMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)
         {
-            sourceItemType = typeof(TSourceItem);
-            targetItemType = typeof(TTargetItem);
             if (TypeHelp.IsArrayOf(typeof(TTarget)))
             {
                 mapperType = MapperType.EnumerableToArray;
@@ -186,10 +184,8 @@ namespace ZK.Mapper.Mappers
 
         public override MapperBase Build(TypePair typePair)
         {
-            if (TypeHelp.IsIEnumerableOf(typePair.SourceType) && TypeHelp.IsIEnumerableOf(typePair.TargetType))
+            if (TypeHelp.IsEnumerable(typePair.SourceType, out var sourceItemType) && TypeHelp.IsEnumerable(typePair.TargetType, out var targetItemType))
             {
-                var sourceItemType = TypeHelp.GetEnumerableItemType(typePair.SourceType);
-                var targetItemType = TypeHelp.GetEnumerableItemType(typePair.TargetType);
                 var type = typeof(EnumerableMapper<,,,>).MakeGenericType(typePair.SourceType, typePair.TargetType, sourceItemType, targetItemType);
                 var mapper = (MapperBase)type.GetConstructor(ImplementMapperConstructorTypes).Invoke(new object[] { RootMapper });
                 return mapper;

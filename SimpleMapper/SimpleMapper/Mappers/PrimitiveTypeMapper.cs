@@ -60,8 +60,8 @@ namespace ZK.Mapper.Mappers
 
         public override MapperBase Build(TypePair typePair)
         {
-            if (TypeHelp.IsPrimitiveNullable(typePair.SourceType, out var sourcePrimitveType)
-                && TypeHelp.IsPrimitiveNullable(typePair.TargetType, out var targetPrimitveType))
+            if (TypeHelp.IsNumberForEnumMap(typePair.SourceType, out var sourcePrimitveType)
+                && TypeHelp.IsNumberForEnumMap(typePair.TargetType, out var targetPrimitveType))
             {
                 if (sourcePrimitveType.IsEnum && targetPrimitveType.IsEnum)
                 {

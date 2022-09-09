@@ -2,8 +2,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SimpleMapper.Test
 {
+    // denpend on BasicTest, PrimitiveTypeMapperTest
     [TestClass]
-    public class PrimitiveTypeTest
+    public class PrimitiveTypeMapperTest
     {
         ZK.Mapper.SimpleMapper simpleMapper = new ZK.Mapper.SimpleMapper();
 

@@ -13,7 +13,7 @@ namespace ZK.Mapper.Help
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static Func<object> CreateEmptyCtor(Type type)
+        public static Func<object> CreateParameterlessCtor(Type type)
         {
             if (type.IsClass)
             {
@@ -30,11 +30,11 @@ namespace ZK.Mapper.Help
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <typeparam name="TTarget"></typeparam>
-        /// <param name="memberRelations"></param>
+        /// <param name="memberPairs"></param>
         /// <returns></returns>
-        public static Func<TSource, TTarget, TTarget> GenerateSameNameSameTypeCopy<TSource, TTarget>(List<SourceTargetMemberRelation> memberRelations)
+        public static Func<TSource, TTarget, TTarget> GenerateSameNameSameTypeCopy<TSource, TTarget>(List<SourceTargetMemberPair> memberPairs)
         {
-            if (memberRelations.Count == 0)
+            if (memberPairs.Count == 0)
             {
                 return (source, target) => target;
             }
@@ -46,17 +46,17 @@ namespace ZK.Mapper.Help
             ParameterExpression targetParam = Expression.Parameter(targetType, "target");
 
             var binaryExpressions = new List<Expression>();
-            foreach (var memberTuple in memberRelations)
+            foreach (var memberPair in memberPairs)
             {
-                // 生成下面代码
+                // Generate code like:
                 // target.targetMember = source.sourceMember
-                MemberExpression left = memberTuple.TargetMember.MemberType == MemberTypes.Property ?
-                    Expression.Property(targetParam, targetType.GetProperty(memberTuple.TargetMember.Name)) : Expression.Field(targetParam, targetType.GetField(memberTuple.TargetMember.Name));
+                MemberExpression left = memberPair.TargetMember.MemberType == MemberTypes.Property ?
+                    Expression.Property(targetParam, targetType.GetProperty(memberPair.TargetMember.Name)) : Expression.Field(targetParam, targetType.GetField(memberPair.TargetMember.Name));
 
-                MemberExpression right = memberTuple.SourceMember.MemberType == MemberTypes.Property ?
-                    Expression.Property(sourceParam, sourceType.GetProperty(memberTuple.SourceMember.Name)) : Expression.Field(sourceParam, sourceType.GetField(memberTuple.SourceMember.Name));
+                MemberExpression right = memberPair.SourceMember.MemberType == MemberTypes.Property ?
+                    Expression.Property(sourceParam, sourceType.GetProperty(memberPair.SourceMember.Name)) : Expression.Field(sourceParam, sourceType.GetField(memberPair.SourceMember.Name));
 
-                binaryExpressions.Add(Expression.Assign(left, right)); // 赋值
+                binaryExpressions.Add(Expression.Assign(left, right));
             }
             binaryExpressions.Add(targetParam);
 
@@ -69,11 +69,11 @@ namespace ZK.Mapper.Help
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <typeparam name="TTarget"></typeparam>
-        /// <param name="memberRelations"></param>
+        /// <param name="memberPairs"></param>
         /// <returns></returns>
-        internal static Func<TSource, TTarget, IRootMapper, TTarget> GenerateSameNameDifferentTypeCopy<TSource, TTarget>(List<SourceTargetMemberRelation> memberRelations)
+        internal static Func<TSource, TTarget, IRootMapper, TTarget> GenerateSameNameDifferentTypeCopy<TSource, TTarget>(List<SourceTargetMemberPair> memberPairs)
         {
-            if (memberRelations.Count == 0)
+            if (memberPairs.Count == 0)
             {
                 return (source, target, rootMapper) => target;
             }
@@ -89,26 +89,26 @@ namespace ZK.Mapper.Help
             MethodInfo methodInfo = typeof(IRootMapper).GetMethod("Map", new Type[] { typeof(Type), typeof(Type), typeof(object), typeof(object) });
 
             var binaryExpressions = new List<Expression>();
-            foreach (var relation in memberRelations)
+            foreach (var memberPair in memberPairs)
             {
-                // 生成下面代码
+                // Generate code like:
                 // target.targetMember = (targetMemberType)rootMapper.Map(sourceMemberType, targetMemberType, (object)source.sourceMember, (object)null)
                 // target.Point1 = (Point)rootMapper.Map(typeof(Point?), typeof(Point), source.Point1, null)
-                MemberExpression left = relation.TargetMember.MemberType == MemberTypes.Property ?
-                    Expression.Property(targetParam, targetType.GetProperty(relation.TargetMember.Name)) : Expression.Field(targetParam, targetType.GetField(relation.TargetMember.Name));
-                MemberExpression sourceMember = relation.SourceMember.MemberType == MemberTypes.Property ?
-                    Expression.Property(sourceParam, sourceType.GetProperty(relation.SourceMember.Name)) : Expression.Field(sourceParam, sourceType.GetField(relation.SourceMember.Name));
+                MemberExpression left = memberPair.TargetMember.MemberType == MemberTypes.Property ?
+                    Expression.Property(targetParam, targetType.GetProperty(memberPair.TargetMember.Name)) : Expression.Field(targetParam, targetType.GetField(memberPair.TargetMember.Name));
+                MemberExpression sourceMember = memberPair.SourceMember.MemberType == MemberTypes.Property ?
+                    Expression.Property(sourceParam, sourceType.GetProperty(memberPair.SourceMember.Name)) : Expression.Field(sourceParam, sourceType.GetField(memberPair.SourceMember.Name));
 
-                var sourceMemberType = Expression.Constant(relation.SourceMember.Type, typeof(Type));
-                var targetMemberType = Expression.Constant(relation.TargetMember.Type, typeof(Type));
+                var sourceMemberType = Expression.Constant(memberPair.SourceMember.Type, typeof(Type));
+                var targetMemberType = Expression.Constant(memberPair.TargetMember.Type, typeof(Type));
                 var sourceObj = Expression.Convert(sourceMember, typeof(object));
                 var targetObj = Expression.Constant(null, typeof(object));
                 MethodCallExpression callExpression = Expression.Call(rootMapperParam, methodInfo, sourceMemberType, targetMemberType, sourceObj, targetObj);
                 // 将 Map() 方法返回的结果强转为 targetMemberType
-                var convertExpression = Expression.Convert(callExpression, relation.TargetMember.Type);
+                var convertExpression = Expression.Convert(callExpression, memberPair.TargetMember.Type);
                 binaryExpressions.Add(Expression.Assign(left, convertExpression));
             }
-            binaryExpressions.Add(targetParam);
+            binaryExpressions.Add(targetParam); // work as "return value;"
 
             var block = Expression.Block(binaryExpressions);
             return Expression.Lambda<Func<TSource, TTarget, IRootMapper, TTarget>>(block, new[] { sourceParam, targetParam, rootMapperParam }).Compile();

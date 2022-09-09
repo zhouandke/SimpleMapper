@@ -5,8 +5,9 @@ using System.Linq;
 
 namespace SimpleMapper.Test
 {
+    // denpend on BasicTest
     [TestClass]
-    public class EnumerableTest
+    public class EnumerableMapperTest
     {
         ZK.Mapper.SimpleMapper simpleMapper = new ZK.Mapper.SimpleMapper();
 

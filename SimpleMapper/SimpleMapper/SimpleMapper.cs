@@ -27,13 +27,14 @@ namespace ZK.Mapper
             .OrderByDescending(o => o.Priority)
             .ToArray();
 
-            AddBasicMaps(); 
+            AddBasicMaps();
         }
 
         public ConcurrentDictionary<TypePair, MapperBase> MapperBaseDicts { get; } = new ConcurrentDictionary<TypePair, MapperBase>();
 
         public ConcurrentDictionary<TypePair, Func<object, object, object>> PostActionDicts { get; } = new ConcurrentDictionary<TypePair, Func<object, object, object>>();
 
+        [Obsolete("改方法设置的mapper, 不能用于 InjectFrom")]
         public void SetCustomMap<TSource, TTarget>(Func<TSource, TTarget> func)
         {
             var typePair = TypePair.Create<TSource, TTarget>();
@@ -41,6 +42,12 @@ namespace ZK.Mapper
             MapperBaseDicts[typePair] = mapper;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TTarget"></typeparam>
+        /// <param name="func">Pay attention, parameter target may be null</param>
         public void SetCustomMap<TSource, TTarget>(Func<TSource, TTarget, TTarget> func)
         {
             var typePair = TypePair.Create<TSource, TTarget>();
@@ -69,18 +76,18 @@ namespace ZK.Mapper
             }
 
             var typePair = TypePair.Create(source.GetType(), typeof(TTarget));
-            var typePairMapper = MapperBaseDicts.GetOrAdd(typePair, pair => CreateMapper(pair));
+            var mapperBase = MapperBaseDicts.GetOrAdd(typePair, pair => CreateMapper(pair));
 
             var target = new TTarget();
-            target = (TTarget)typePairMapper.Map(source, target);
+            target = (TTarget)mapperBase.Map(source, target);
             return (TTarget)target;
         }
 
         public object Map(Type sourceType, Type targetType, object source, object target)
         {
             var typePair = TypePair.Create(sourceType, targetType);
-            var typePairMapper = MapperBaseDicts.GetOrAdd(typePair, pair => CreateMapper(pair));
-            target = typePairMapper.Map(source, target);
+            var mapperBase = MapperBaseDicts.GetOrAdd(typePair, pair => CreateMapper(pair));
+            target = mapperBase.Map(source, target);
             return target;
         }
 
@@ -92,8 +99,8 @@ namespace ZK.Mapper
             }
 
             var typePair = TypePair.Create<TSource, TTarget>();
-            var typePairMapper = MapperBaseDicts.GetOrAdd(typePair, pair => CreateMapper(pair));
-            target = (TTarget)typePairMapper.Map(source, target);
+            var mapperBase = MapperBaseDicts.GetOrAdd(typePair, pair => CreateMapper(pair));
+            target = (TTarget)mapperBase.Map(source, target);
             return target;
         }
 
@@ -112,37 +119,37 @@ namespace ZK.Mapper
 
         private void AddBasicMaps()
         {
-            SetCustomMap<string, bool>(src => bool.TryParse(src, out var value) ? value : default);
-            SetCustomMap<string, byte>(src => byte.TryParse(src, out var value) ? value : default);
-            SetCustomMap<string, sbyte>(src => sbyte.TryParse(src, out var value) ? value : default);
-            SetCustomMap<string, char>(src => char.TryParse(src, out var value) ? value : default);
-            SetCustomMap<string, short>(src => short.TryParse(src, out var value) ? value : default);
-            SetCustomMap<string, ushort>(src => ushort.TryParse(src, out var value) ? value : default);
-            SetCustomMap<string, int>(src => int.TryParse(src, out var value) ? value : default);
-            SetCustomMap<string, uint>(src => uint.TryParse(src, out var value) ? value : default);
-            SetCustomMap<string, long>(src => long.TryParse(src, out var value) ? value : default);
-            SetCustomMap<string, ulong>(src => ulong.TryParse(src, out var value) ? value : default);
-            SetCustomMap<string, float>(src => float.TryParse(src, out var value) ? value : default);
-            SetCustomMap<string, double>(src => double.TryParse(src, out var value) ? value : default);
-            SetCustomMap<string, decimal>(src => decimal.TryParse(src, out var value) ? value : default);
-            SetCustomMap<string, DateTime>(src => DateTime.TryParse(src, out var value) ? value : default);
-            SetCustomMap<string, TimeSpan>(src => TimeSpan.TryParse(src, out var value) ? value : default);
+            SetCustomMap<string, bool>((src, _) => bool.TryParse(src, out var value) ? value : default);
+            SetCustomMap<string, byte>((src, _) => byte.TryParse(src, out var value) ? value : default);
+            SetCustomMap<string, sbyte>((src, _) => sbyte.TryParse(src, out var value) ? value : default);
+            SetCustomMap<string, char>((src, _) => char.TryParse(src, out var value) ? value : default);
+            SetCustomMap<string, short>((src, _) => short.TryParse(src, out var value) ? value : default);
+            SetCustomMap<string, ushort>((src, _) => ushort.TryParse(src, out var value) ? value : default);
+            SetCustomMap<string, int>((src, _) => int.TryParse(src, out var value) ? value : default);
+            SetCustomMap<string, uint>((src, _) => uint.TryParse(src, out var value) ? value : default);
+            SetCustomMap<string, long>((src, _) => long.TryParse(src, out var value) ? value : default);
+            SetCustomMap<string, ulong>((src, _) => ulong.TryParse(src, out var value) ? value : default);
+            SetCustomMap<string, float>((src, _) => float.TryParse(src, out var value) ? value : default);
+            SetCustomMap<string, double>((src, _) => double.TryParse(src, out var value) ? value : default);
+            SetCustomMap<string, decimal>((src, _) => decimal.TryParse(src, out var value) ? value : default);
+            SetCustomMap<string, DateTime>((src, _) => DateTime.TryParse(src, out var value) ? value : default);
+            SetCustomMap<string, TimeSpan>((src, _) => TimeSpan.TryParse(src, out var value) ? value : default);
 
-            SetCustomMap<string, bool?>(src => bool.TryParse(src, out var value) ? (bool?)value : default);
-            SetCustomMap<string, byte?>(src => byte.TryParse(src, out var value) ? (byte?)value : default);
-            SetCustomMap<string, sbyte?>(src => sbyte.TryParse(src, out var value) ? (sbyte?)value : default);
-            SetCustomMap<string, char?>(src => char.TryParse(src, out var value) ? (char?)value : default);
-            SetCustomMap<string, short?>(src => short.TryParse(src, out var value) ? (short?)value : default);
-            SetCustomMap<string, ushort?>(src => ushort.TryParse(src, out var value) ? (ushort?)value : default);
-            SetCustomMap<string, int?>(src => int.TryParse(src, out var value) ? (int?)value : default);
-            SetCustomMap<string, uint?>(src => uint.TryParse(src, out var value) ? (uint?)value : default);
-            SetCustomMap<string, long?>(src => long.TryParse(src, out var value) ? (long?)value : default);
-            SetCustomMap<string, ulong?>(src => ulong.TryParse(src, out var value) ? (ulong?)value : default);
-            SetCustomMap<string, float?>(src => float.TryParse(src, out var value) ? (float?)value : default);
-            SetCustomMap<string, double?>(src => double.TryParse(src, out var value) ? (double?)value : default);
-            SetCustomMap<string, decimal?>(src => decimal.TryParse(src, out var value) ? (decimal?)value : default);
-            SetCustomMap<string, DateTime?>(src => DateTime.TryParse(src, out var value) ? (DateTime?)value : default);
-            SetCustomMap<string, TimeSpan?>(src => TimeSpan.TryParse(src, out var value) ? (TimeSpan?)value : default);
+            SetCustomMap<string, bool?>((src, _) => bool.TryParse(src, out var value) ? (bool?)value : default);
+            SetCustomMap<string, byte?>((src, _) => byte.TryParse(src, out var value) ? (byte?)value : default);
+            SetCustomMap<string, sbyte?>((src, _) => sbyte.TryParse(src, out var value) ? (sbyte?)value : default);
+            SetCustomMap<string, char?>((src, _) => char.TryParse(src, out var value) ? (char?)value : default);
+            SetCustomMap<string, short?>((src, _) => short.TryParse(src, out var value) ? (short?)value : default);
+            SetCustomMap<string, ushort?>((src, _) => ushort.TryParse(src, out var value) ? (ushort?)value : default);
+            SetCustomMap<string, int?>((src, _) => int.TryParse(src, out var value) ? (int?)value : default);
+            SetCustomMap<string, uint?>((src, _) => uint.TryParse(src, out var value) ? (uint?)value : default);
+            SetCustomMap<string, long?>((src, _) => long.TryParse(src, out var value) ? (long?)value : default);
+            SetCustomMap<string, ulong?>((src, _) => ulong.TryParse(src, out var value) ? (ulong?)value : default);
+            SetCustomMap<string, float?>((src, _) => float.TryParse(src, out var value) ? (float?)value : default);
+            SetCustomMap<string, double?>((src, _) => double.TryParse(src, out var value) ? (double?)value : default);
+            SetCustomMap<string, decimal?>((src, _) => decimal.TryParse(src, out var value) ? (decimal?)value : default);
+            SetCustomMap<string, DateTime?>((src, _) => DateTime.TryParse(src, out var value) ? (DateTime?)value : default);
+            SetCustomMap<string, TimeSpan?>((src, _) => TimeSpan.TryParse(src, out var value) ? (TimeSpan?)value : default);
         }
     }
 }

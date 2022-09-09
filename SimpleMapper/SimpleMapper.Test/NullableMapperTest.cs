@@ -4,8 +4,9 @@ using System.Collections.ObjectModel;
 
 namespace SimpleMapper.Test
 {
+    // denpend on BasicTest
     [TestClass]
-    public class NullableTest
+    public class NullableMapperTest
     {
         ZK.Mapper.SimpleMapper simpleMapper = new ZK.Mapper.SimpleMapper();
 

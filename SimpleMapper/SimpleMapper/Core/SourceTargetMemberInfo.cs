@@ -3,9 +3,9 @@ using System.Reflection;
 
 namespace ZK.Mapper.Core
 {
-    internal class PropertyFieldInfo
+    internal class SourceTargetMemberInfo
     {
-        public PropertyFieldInfo(PropertyInfo propertyInfo)
+        public SourceTargetMemberInfo(PropertyInfo propertyInfo)
         {
             PropertyInfo = propertyInfo;
             MemberType = MemberTypes.Property;
@@ -13,7 +13,7 @@ namespace ZK.Mapper.Core
             Type = propertyInfo.PropertyType;
         }
 
-        public PropertyFieldInfo(FieldInfo fieldInfo)
+        public SourceTargetMemberInfo(FieldInfo fieldInfo)
         {
             FieldInfo = fieldInfo;
             MemberType = MemberTypes.Field;
@@ -30,18 +30,5 @@ namespace ZK.Mapper.Core
         public string Name { get; }
 
         public Type Type { get; }
-    }
-
-    internal class SourceTargetMemberRelation
-    {
-        public SourceTargetMemberRelation(PropertyFieldInfo sourceMember, PropertyFieldInfo targetMember)
-        {
-            SourceMember = sourceMember;
-            TargetMember = targetMember;
-        }
-
-        public PropertyFieldInfo SourceMember { get; }
-
-        public PropertyFieldInfo TargetMember { get; }
     }
 }

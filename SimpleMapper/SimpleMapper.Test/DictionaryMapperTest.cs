@@ -4,10 +4,11 @@ using System.Collections.ObjectModel;
 
 namespace SimpleMapper.Test
 {
+    // denpend on BasicTest
     [TestClass]
-    public class DictionaryTest
+    public class DictionaryMapperTest
     {
-        ZK.Mapper.SimpleMapper simpleMapper = new ZK.Mapper.SimpleMapper();
+        readonly ZK.Mapper.SimpleMapper simpleMapper = new ZK.Mapper.SimpleMapper();
 
         [TestMethod]
         public void BasicTest()
