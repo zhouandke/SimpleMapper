@@ -16,7 +16,7 @@ namespace ZK.Mapper.Core
         /// <summary>
         /// 保存 PostAction
         /// </summary>
-        ConcurrentDictionary<TypePair, Action<object, object>> PostActionDicts { get; }
+        ConcurrentDictionary<TypePair, Func<object, object, object>> PostActionDicts { get; }
 
         /// <summary>
         /// 1. 使用 source 的属性新建一个 target(前提是有默认构造器), 入参 target 设为null;  

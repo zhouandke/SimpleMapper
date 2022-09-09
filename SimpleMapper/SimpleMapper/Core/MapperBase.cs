@@ -21,10 +21,10 @@ namespace ZK.Mapper.Core
         {
             target = MapCore(source, target);
 
-            Action<object, object> postAction;
-            if (RootMapper.PostActionDicts.TryGetValue(TypePair, out postAction))
+            Func<object, object, object> postFunc;
+            if (RootMapper.PostActionDicts.TryGetValue(TypePair, out postFunc))
             {
-                postAction(source, target);
+                target= postFunc(source, target);
             }
             return target;
         }

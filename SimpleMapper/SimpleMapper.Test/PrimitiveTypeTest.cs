@@ -34,7 +34,6 @@ namespace SimpleMapper.Test
         [TestMethod]
         public void PrimitiveTypeEnumerableTest()
         {
-            decimal k = 1;
             var src = new B
             {
                 Ids = new long?[] { 1, (long?)null },

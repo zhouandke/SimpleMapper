@@ -31,7 +31,7 @@ namespace ZK.Mapper
 
         public ConcurrentDictionary<TypePair, MapperBase> MapperBaseDicts { get; } = new ConcurrentDictionary<TypePair, MapperBase>();
 
-        public ConcurrentDictionary<TypePair, Action<object, object>> PostActionDicts { get; } = new ConcurrentDictionary<TypePair, Action<object, object>>();
+        public ConcurrentDictionary<TypePair, Func<object, object, object>> PostActionDicts { get; } = new ConcurrentDictionary<TypePair, Func<object, object, object>>();
 
         public void SetCustomMap<TSource, TTarget>(Func<TSource, TTarget> func)
         {
@@ -47,10 +47,10 @@ namespace ZK.Mapper
             MapperBaseDicts[typePair] = mapper;
         }
 
-        public void SetPostAction<TSource, TTarget>(Action<TSource, TTarget> action)
+        public void SetPostAction<TSource, TTarget>(Func<TSource, TTarget, TTarget> func)
         {
             var typePair = TypePair.Create<TSource, TTarget>();
-            PostActionDicts[typePair] = (sourcObj, targetObj) => action((TSource)sourcObj, (TTarget)targetObj);
+            PostActionDicts[typePair] = (sourcObj, targetObj) => func((TSource)sourcObj, (TTarget)targetObj);
         }
 
         public TTarget Map<TTarget, TSource>(TSource source)
