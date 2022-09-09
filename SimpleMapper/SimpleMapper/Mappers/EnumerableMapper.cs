@@ -14,7 +14,7 @@ namespace ZK.Mapper.Mappers
     /// <typeparam name="TTarget"></typeparam>
     /// <typeparam name="TSourceItem"></typeparam>
     /// <typeparam name="TTargetItem"></typeparam>
-    public class EnumerableMapper<TSource, TTarget, TSourceItem, TTargetItem> : MapperBase
+    internal class EnumerableMapper<TSource, TTarget, TSourceItem, TTargetItem> : MapperBase
     {
         private static readonly Type sourceItemType = typeof(TSourceItem);
         private static readonly Type targetItemType = typeof(TTargetItem);
@@ -174,7 +174,7 @@ namespace ZK.Mapper.Mappers
     }
 
 
-    public class EnumerableMapperBuilder : MapperBuilderBase
+    internal class EnumerableMapperBuilder : MapperBuilderBase
     {
         public EnumerableMapperBuilder(IRootMapper rootMapper) : base(rootMapper)
         {

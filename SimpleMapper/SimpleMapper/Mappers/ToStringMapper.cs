@@ -8,7 +8,7 @@ namespace ZK.Mapper.Mappers
     /// object 转换为 string
     /// </summary>
     /// <typeparam name="TSource"></typeparam>
-    public class ToStringMapper<TSource> : MapperBase
+    internal class ToStringMapper<TSource> : MapperBase
     {
         public ToStringMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(string)), rootMapper)
@@ -21,7 +21,7 @@ namespace ZK.Mapper.Mappers
     }
 
 
-    public class ToStringMapperBuilder : MapperBuilderBase
+    internal class ToStringMapperBuilder : MapperBuilderBase
     {
         public ToStringMapperBuilder(IRootMapper rootMapper) : base(rootMapper)
         {

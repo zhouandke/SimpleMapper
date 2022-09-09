@@ -11,20 +11,15 @@ namespace ZK.Mapper.Mappers
     /// <typeparam name="TTarget"></typeparam>
     /// <typeparam name="TSourcePrimitve"></typeparam>
     /// <typeparam name="TTargetPrimitve"></typeparam>
-    public class PrimitiveTypeMapper<TSource, TTarget, TSourcePrimitve, TTargetPrimitve> : MapperBase
+    internal class PrimitiveTypeMapper<TSource, TTarget, TSourcePrimitve, TTargetPrimitve> : MapperBase
     {
-        private readonly bool isSourceNullable;
-        private readonly bool isTargetNullable;
-        private readonly Type targetType;
-        private readonly Type targetPrimitveType;
+        private static readonly Type targetType = typeof(TTarget);
+        private static readonly Type targetPrimitveType = typeof(TTargetPrimitve);
+        private static readonly bool isTargetNullable = TypeHelp.IsNullable(typeof(TTarget));
 
         public PrimitiveTypeMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)
         {
-            isSourceNullable = TypeHelp.IsNullable(typeof(TSource));
-            isTargetNullable = TypeHelp.IsNullable(typeof(TTarget));
-            targetType = typeof(TTarget);
-            targetPrimitveType = typeof(TTargetPrimitve);
         }
 
         protected override object MapCore(object source, object target)
@@ -50,7 +45,7 @@ namespace ZK.Mapper.Mappers
         }
     }
 
-    public class PrimitiveTypeMapperBuilder : MapperBuilderBase
+    internal class PrimitiveTypeMapperBuilder : MapperBuilderBase
     {
         public PrimitiveTypeMapperBuilder(IRootMapper rootMapper) : base(rootMapper)
         {

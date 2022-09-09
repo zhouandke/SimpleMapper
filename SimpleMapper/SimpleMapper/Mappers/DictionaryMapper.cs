@@ -68,7 +68,7 @@ namespace ZK.Mapper.Mappers
     }
 
 
-    public class DictionaryMapperBuilder : MapperBuilderBase
+    internal class DictionaryMapperBuilder : MapperBuilderBase
     {
         public DictionaryMapperBuilder(IRootMapper rootMapper) : base(rootMapper)
         {

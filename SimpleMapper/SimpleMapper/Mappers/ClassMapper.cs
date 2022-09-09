@@ -88,7 +88,7 @@ namespace ZK.Mapper.Mappers
     }
 
 
-    public class ClassMapperBuilder : MapperBuilderBase
+    internal class ClassMapperBuilder : MapperBuilderBase
     {
         public ClassMapperBuilder(IRootMapper rootMapper) : base(rootMapper)
         {

@@ -9,7 +9,7 @@ namespace ZK.Mapper.Mappers
     /// </summary>
     /// <typeparam name="TSource"></typeparam>
     /// <typeparam name="TTarget"></typeparam>
-    public class NullableMapper<TSource, TTarget> : MapperBase
+    internal class NullableMapper<TSource, TTarget> : MapperBase
     {
         public NullableMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)
@@ -31,7 +31,7 @@ namespace ZK.Mapper.Mappers
     }
 
 
-    public class NullableMapperBuilder : MapperBuilderBase
+    internal class NullableMapperBuilder : MapperBuilderBase
     {
         public NullableMapperBuilder(IRootMapper rootMapper) : base(rootMapper)
         {
