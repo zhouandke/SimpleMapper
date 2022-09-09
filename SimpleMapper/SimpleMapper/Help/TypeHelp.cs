@@ -40,6 +40,26 @@ namespace ZK.Mapper.Help
             return false;
         }
 
+
+        public static bool IsDictionaryOf(Type type, out Type keyType, out Type valueType)
+        {
+            if (IsGenericType(type) &&
+                   (type.GetGenericTypeDefinition() == typeof(Dictionary<,>) ||
+                    type.GetGenericTypeDefinition() == typeof(IDictionary<,>)))
+            {
+                var genericArguments = type.GetGenericArguments();
+                keyType = genericArguments[0];
+                valueType = genericArguments[1];
+                return true;
+            }
+            else
+            {
+                keyType = null;
+                valueType = null;
+                return false;
+            }
+        }
+
         public static Type GetEnumerableItemType(Type type)
         {
             if (type.IsArray)
@@ -77,7 +97,7 @@ namespace ZK.Mapper.Help
 
         public static bool HasParameterlessCtor(Type type)
         {
-            return type.GetConstructor(Type.EmptyTypes) != null 
+            return type.GetConstructor(Type.EmptyTypes) != null
                 || type.IsValueType; // 值类型 GetConstructor(Type.EmptyTypes) 始终是 null, 但值类型绝对有 无参构造函数
         }
 

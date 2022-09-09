@@ -31,4 +31,17 @@ namespace ZK.Mapper.Core
 
         public Type Type { get; }
     }
+
+    internal class SourceTargetMemberRelation
+    {
+        public SourceTargetMemberRelation(PropertyFieldInfo sourceMember, PropertyFieldInfo targetMember)
+        {
+            SourceMember = sourceMember;
+            TargetMember = targetMember;
+        }
+
+        public PropertyFieldInfo SourceMember { get; }
+
+        public PropertyFieldInfo TargetMember { get; }
+    }
 }

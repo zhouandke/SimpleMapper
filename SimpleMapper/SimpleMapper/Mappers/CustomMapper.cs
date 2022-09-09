@@ -20,7 +20,9 @@ namespace ZK.Mapper.Mappers
 
         protected override object MapCore(object source, object target)
         {
-            var newTarget = customFunc((TSource)source, (TTarget)target);
+            var src = source is TSource ? (TSource)source : default;
+            var dst = target is TTarget ? (TTarget)target : default;
+            var newTarget = customFunc(src, dst);
             return newTarget;
         }
     }

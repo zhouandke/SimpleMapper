@@ -5,8 +5,10 @@ namespace SimpleMapper.Test
     [TestClass]
     public class PrimitiveTypeTest
     {
+        ZK.Mapper.SimpleMapper simpleMapper = new ZK.Mapper.SimpleMapper();
+
         [TestMethod]
-        public void PrimitiveTypeBasicTest()
+        public void BasicTest()
         {
             var src = new A
             {
@@ -18,7 +20,7 @@ namespace SimpleMapper.Test
                 Death = false,
                 IsDelete = 1
             };
-            var dst = ZK.Mapper.SimpleMapper.Default.Map<ADto>(src);
+            var dst = simpleMapper.Map<ADto>(src);
             Assert.AreEqual(src.Id, dst.Id);
             Assert.AreEqual(src.Name, dst.Name);
             Assert.AreEqual(src.Age, dst.Age.Value);
@@ -39,7 +41,7 @@ namespace SimpleMapper.Test
                 Colors = new int[] { 1, 2 },
                 Scores = new decimal?[] { (decimal?)1.1, (decimal?)null, (decimal?)3.9 }
             };
-            var dst = ZK.Mapper.SimpleMapper.Default.Map<BDto>(src);
+            var dst = simpleMapper.Map<BDto>(src);
             Assert.AreEqual(src.Ids.Length, dst.Ids.Length);
             Assert.AreEqual(1, dst.Ids[0]);
             Assert.AreEqual(0, dst.Ids[1]);

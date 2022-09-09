@@ -19,14 +19,14 @@ namespace ZK.Mapper.Core
         ConcurrentDictionary<TypePair, Action<object, object>> PostActionDicts { get; }
 
         /// <summary>
-        /// 1. 使用 source 的属性新建一个 target(前提是有默认构造器), 入参 target 设为null, 返回值就是处理好的Target  
-        /// 2. 将 source 的属性拷贝至 target, target 不能为空, 处理好的Target就是入参target, 请忽略返回值
+        /// 1. 使用 source 的属性新建一个 target(前提是有默认构造器), 入参 target 设为null;  
+        /// 2. 将 source 的属性拷贝至 target, target 不能为空, 处理好的Target就是返回值（因为值类型作为参数时总是复制一份新的）
         /// </summary>
         /// <param name="sourceType"></param>
         /// <param name="targetType"></param>
         /// <param name="source"></param>
         /// <param name="target"></param>
         /// <returns></returns>
-        object Map(Type sourceType, Type targetType, object source, ref object target);
+        object Map(Type sourceType, Type targetType, object source, object target);
     }
 }

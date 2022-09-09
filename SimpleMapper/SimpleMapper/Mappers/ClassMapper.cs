@@ -21,13 +21,13 @@ namespace ZK.Mapper.Mappers
         public ClassMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)
         {
-            var sourceMembers = TypePair.SourceType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty).Select(o => new PropertyFieldInfo(o))
+            var sourceMembers = TypePair.SourceType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty).Where(o => o.CanRead).Select(o => new PropertyFieldInfo(o))
                 .Concat(TypePair.SourceType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetField).Select(o => new PropertyFieldInfo(o))).ToList();
-            var targetMembers = TypePair.TargetType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty).Select(o => new PropertyFieldInfo(o))
+            var targetMembers = TypePair.TargetType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty).Where(o => o.CanWrite).Select(o => new PropertyFieldInfo(o))
                 .Concat(TypePair.TargetType.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetField).Select(o => new PropertyFieldInfo(o))).ToList();
 
-            var sameNameSameTypes = new List<Tuple<PropertyFieldInfo, PropertyFieldInfo>>();
-            var sameNameDifferentTypes = new List<Tuple<PropertyFieldInfo, PropertyFieldInfo>>();
+            var sameNameSameTypes = new List<SourceTargetMemberRelation>();
+            var sameNameDifferentTypes = new List<SourceTargetMemberRelation>();
             foreach (var sourceMember in sourceMembers)
             {
                 var targetMember = targetMembers.Find(o => o.Name == sourceMember.Name);
@@ -37,18 +37,18 @@ namespace ZK.Mapper.Mappers
                 }
                 if (targetMember.Type == sourceMember.Type)
                 {
-                    sameNameSameTypes.Add(Tuple.Create(sourceMember, targetMember));
+                    sameNameSameTypes.Add(new SourceTargetMemberRelation(sourceMember, targetMember));
                 }
                 else
                 {
-                    sameNameDifferentTypes.Add(Tuple.Create(sourceMember, targetMember));
+                    sameNameDifferentTypes.Add(new SourceTargetMemberRelation(sourceMember, targetMember));
                 }
             }
             sameNameSameTypeCopy = ExpressionGenerator.GenerateSameNameSameTypeCopy<TSource, TTarget>(sameNameSameTypes);
             sameNameDifferentTypeCopy = ExpressionGenerator.GenerateSameNameDifferentTypeCopy<TSource, TTarget>(sameNameDifferentTypes);
 
-            SameNameSameTypes = sameNameSameTypes.Select(o => o.Item1.Name).ToArray();
-            SameNameDifferentTypes = sameNameDifferentTypes.Select(o => o.Item1.Name).ToArray();
+            SameNameSameTypes = sameNameSameTypes.Select(o => o.SourceMember.Name).ToArray();
+            SameNameDifferentTypes = sameNameDifferentTypes.Select(o => o.TargetMember.Name).ToArray();
         }
 
         public string[] SameNameSameTypes { get; }
@@ -81,9 +81,8 @@ namespace ZK.Mapper.Mappers
 
         private TTarget MapCoreGeneric(TSource source, TTarget target)
         {
-
-            target= sameNameSameTypeCopy(source, target);
-            target= sameNameDifferentTypeCopy(source, target, RootMapper);
+            target = sameNameSameTypeCopy(source, target);
+            target = sameNameDifferentTypeCopy(source, target, RootMapper);
             return target;
         }
 
