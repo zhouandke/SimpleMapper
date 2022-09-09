@@ -15,7 +15,7 @@ namespace ZK.Mapper.Core
         {
             SourceType = sourceType;
             TargetType = targetType;
-            TargetTypeHasEmptyCtor = TypeHelp.HasDefaultCtor(TargetType);
+            TargetTypeHasParameterlessCtor = TypeHelp.HasParameterlessCtor(TargetType);
             hashCode = SourceType.GetHashCode() ^ TargetType.GetHashCode();
         }
 
@@ -23,13 +23,13 @@ namespace ZK.Mapper.Core
 
         public Type TargetType { get; }
 
-        public bool TargetTypeHasEmptyCtor { get; }
+        public bool TargetTypeHasParameterlessCtor { get; }
 
-        public Func<object> TargetEmptyCtor
+        public Func<object> TargetParameterlessCtor
         {
             get
             {
-                if (!TargetTypeHasEmptyCtor)
+                if (!TargetTypeHasParameterlessCtor)
                 {
                     return null;
                 }

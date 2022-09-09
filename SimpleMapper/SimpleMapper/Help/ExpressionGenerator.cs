@@ -9,13 +9,20 @@ namespace ZK.Mapper.Help
     internal static class ExpressionGenerator
     {
         /// <summary>
-        /// 编译生成 默认构造器的创建方法, 这个比 直接代码慢一倍，但反射是直接代码的70倍时间
+        /// 编译生成 无参构造器的创建方法, 直接 new 耗时1, 改方法是 2, Activator.CreateInstance 是 3, 反射是70
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
         public static Func<object> CreateEmptyCtor(Type type)
         {
-            return Expression.Lambda<Func<object>>(Expression.New(type)).Compile();
+            if (type.IsClass)
+            {
+                return Expression.Lambda<Func<object>>(Expression.New(type)).Compile();
+            }
+            else
+            {
+                return () => Activator.CreateInstance(type);  
+            }
         }
 
         /// <summary>
@@ -25,11 +32,11 @@ namespace ZK.Mapper.Help
         /// <typeparam name="TTarget"></typeparam>
         /// <param name="memberTuples"></param>
         /// <returns></returns>
-        public static Action<TSource, TTarget> GenerateSameNameSameTypeCopy<TSource, TTarget>(List<Tuple<PropertyFieldInfo, PropertyFieldInfo>> memberTuples)
+        public static Func<TSource, TTarget, TTarget> GenerateSameNameSameTypeCopy<TSource, TTarget>(List<Tuple<PropertyFieldInfo, PropertyFieldInfo>> memberTuples)
         {
             if (memberTuples.Count == 0)
             {
-                return (source, target) => { };
+                return (source, target) => target;
             }
 
             Type sourceType = typeof(TSource);
@@ -51,9 +58,10 @@ namespace ZK.Mapper.Help
 
                 binaryExpressions.Add(Expression.Assign(left, right)); // 赋值
             }
+            binaryExpressions.Add(objDst);
 
             var block = Expression.Block(binaryExpressions);
-            return Expression.Lambda<Action<TSource, TTarget>>(block, new[] { objSrc, objDst }).Compile();
+            return Expression.Lambda<Func<TSource, TTarget, TTarget>>(block, new[] { objSrc, objDst }).Compile();
         }
 
         /// <summary>
@@ -63,11 +71,11 @@ namespace ZK.Mapper.Help
         /// <typeparam name="TTarget"></typeparam>
         /// <param name="memberTuples"></param>
         /// <returns></returns>
-        internal static Action<TSource, TTarget, IRootMapper> GenerateSameNameDifferentTypeCopy<TSource, TTarget>(List<Tuple<PropertyFieldInfo, PropertyFieldInfo>> memberTuples)
+        internal static Func<TSource, TTarget, IRootMapper, TTarget> GenerateSameNameDifferentTypeCopy<TSource, TTarget>(List<Tuple<PropertyFieldInfo, PropertyFieldInfo>> memberTuples)
         {
             if (memberTuples.Count == 0)
             {
-                return (source, target, rootMapper) => { };
+                return (source, target, rootMapper) => target;
             }
 
             Type sourceType = typeof(TSource);
@@ -78,9 +86,12 @@ namespace ZK.Mapper.Help
             ParameterExpression targetParam = Expression.Parameter(targetType, "target");
             ParameterExpression rootMapperParam = Expression.Parameter(rootMapperType, "rootMapper");
             // 获取 IRootMapper.Map 方法
-            MethodInfo methodInfo = typeof(IRootMapper).GetMethod("Map", new Type[] { typeof(Type), typeof(Type), typeof(object), typeof(object) });
+            MethodInfo methodInfo = typeof(IRootMapper).GetMethod("Map");
 
             var binaryExpressions = new List<Expression>();
+            var _Variable = Expression.Variable(typeof(object), "_");
+            var _VariableAssign = Expression.Assign(_Variable, Expression.Constant(null, typeof(object)));
+            //binaryExpressions.Add(_VariableAssign);
             foreach (var memberTuple in memberTuples)
             {
                 // 生成下面代码
@@ -94,15 +105,17 @@ namespace ZK.Mapper.Help
                 var sourceMemberType = Expression.Constant(memberTuple.Item1.Type, typeof(Type));
                 var targetMemberType = Expression.Constant(memberTuple.Item2.Type, typeof(Type));
                 var sourceObj = Expression.Convert(sourceMember, typeof(object));
-                var targetObj = Expression.Constant(null, typeof(object));
-                MethodCallExpression callExpression = Expression.Call(rootMapperParam, methodInfo, sourceMemberType, targetMemberType, sourceObj, targetObj);
+                //var targetObj = Expression.Constant(null, typeof(object));
+                binaryExpressions.Add(_VariableAssign);
+                MethodCallExpression callExpression = Expression.Call(rootMapperParam, methodInfo, sourceMemberType, targetMemberType, sourceObj, _Variable);
                 // 将 Map() 方法返回的结果强转为 targetMemberType
                 var convertExpression = Expression.Convert(callExpression, memberTuple.Item2.Type);
                 binaryExpressions.Add(Expression.Assign(left, convertExpression));
             }
+            binaryExpressions.Add(targetParam);
 
-            var block = Expression.Block(binaryExpressions);
-            return Expression.Lambda<Action<TSource, TTarget, IRootMapper>>(block, new[] { sourceParam, targetParam, rootMapperParam }).Compile();
+            var block = Expression.Block(new[] { _Variable }, binaryExpressions);
+            return Expression.Lambda<Func<TSource, TTarget, IRootMapper, TTarget>>(block, new[] { sourceParam, targetParam, rootMapperParam }).Compile();
         }
     }
 }

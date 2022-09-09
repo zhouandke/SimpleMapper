@@ -94,7 +94,8 @@ namespace ZK.Mapper.Mappers
                 {
                     break;
                 }
-                var target = RootMapper.Map(sourceItemType, targetItemType, source);
+                object _ = null;
+                var target = RootMapper.Map(sourceItemType, targetItemType, source, ref _);
                 targets[index] = (TTargetItem)target;
                 index++;
             }
@@ -114,7 +115,8 @@ namespace ZK.Mapper.Mappers
 
             foreach (var source in sources)
             {
-                var target = RootMapper.Map(sourceItemType, targetItemType, source);
+                object _ = null;
+                var target = RootMapper.Map(sourceItemType, targetItemType, source, ref _);
                 targets.Add((TTargetItem)target);
             }
 
@@ -134,7 +136,8 @@ namespace ZK.Mapper.Mappers
 
             foreach (var source in sources)
             {
-                var target = RootMapper.Map(sourceItemType, targetItemType, source);
+                object _ = null;
+                var target = RootMapper.Map(sourceItemType, targetItemType, source, ref _);
                 targets.Add((TTargetItem)target);
             }
 
@@ -154,7 +157,8 @@ namespace ZK.Mapper.Mappers
 
             foreach (var source in sources)
             {
-                var target = RootMapper.Map(sourceItemType, targetItemType, source);
+                object _ = null;
+                var target = RootMapper.Map(sourceItemType, targetItemType, source, ref _);
                 if (target != null)
                 {
                     targets.Add((TTargetItem)target);

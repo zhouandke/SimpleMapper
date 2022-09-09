@@ -15,8 +15,8 @@ namespace ZK.Mapper.Mappers
     /// <typeparam name="TTarget"></typeparam>
     public class ClassMapper<TSource, TTarget> : MapperBase
     {
-        private readonly Action<TSource, TTarget> sameNameSameTypeCopy;
-        private readonly Action<TSource, TTarget, IRootMapper> sameNameDifferentTypeCopy;
+        private readonly Func<TSource, TTarget, TTarget> sameNameSameTypeCopy;
+        private readonly Func<TSource, TTarget, IRootMapper, TTarget> sameNameDifferentTypeCopy;
 
         public ClassMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)
@@ -69,11 +69,11 @@ namespace ZK.Mapper.Mappers
 
             if (target == null)
             {
-                if (!TypePair.TargetTypeHasEmptyCtor)
+                if (!TypePair.TargetTypeHasParameterlessCtor)
                 {
                     return target ?? default(TTarget);
                 }
-                target = TypePair.TargetEmptyCtor();
+                target = TypePair.TargetParameterlessCtor();
             }
 
             return MapCoreGeneric((TSource)source, (TTarget)target);
@@ -82,8 +82,8 @@ namespace ZK.Mapper.Mappers
         private TTarget MapCoreGeneric(TSource source, TTarget target)
         {
 
-            sameNameSameTypeCopy(source, target);
-            sameNameDifferentTypeCopy(source, target, RootMapper);
+            target= sameNameSameTypeCopy(source, target);
+            target= sameNameDifferentTypeCopy(source, target, RootMapper);
             return target;
         }
 

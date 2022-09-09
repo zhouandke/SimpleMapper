@@ -27,6 +27,6 @@ namespace ZK.Mapper.Core
         /// <param name="source"></param>
         /// <param name="target"></param>
         /// <returns></returns>
-        object Map(Type sourceType, Type targetType, object source, object target = null);
+        object Map(Type sourceType, Type targetType, object source, ref object target);
     }
 }

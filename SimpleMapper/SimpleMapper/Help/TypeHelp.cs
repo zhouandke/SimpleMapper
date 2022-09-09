@@ -75,9 +75,10 @@ namespace ZK.Mapper.Help
                        .MakeGenericMethod(arguments);
         }
 
-        public static bool HasDefaultCtor(Type type)
+        public static bool HasParameterlessCtor(Type type)
         {
-            return type.GetConstructor(Type.EmptyTypes) != null;
+            return type.GetConstructor(Type.EmptyTypes) != null 
+                || type.IsValueType; // 值类型 GetConstructor(Type.EmptyTypes) 始终是 null, 但值类型绝对有 无参构造函数
         }
 
         public static bool IsDictionaryOf(Type type)

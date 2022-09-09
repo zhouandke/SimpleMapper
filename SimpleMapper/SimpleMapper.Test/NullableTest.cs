@@ -22,14 +22,14 @@ namespace SimpleMapper.Test
             Assert.IsNotNull(dst.Point3);
             Assert.AreEqual(src.Point3.X, dst.Point3.Value.X);
 
-            Point? p1 = null;
-            Point p2 = new Point() { X = 2 };
-            Point? p3 = new Point() { X = 3 };
-            ZK.Mapper.SimpleMapper.Default.Inject(p2, p1);
-            Assert.AreEqual(2, p2.X);
+            //Point? p1 = null;
+            //Point p2 = new Point() { X = 2 };
+            //Point? p3 = new Point() { X = 3 };
+            //ZK.Mapper.SimpleMapper.Default.Inject(p2, p1);
+            //Assert.AreEqual(2, p2.X);
 
-            ZK.Mapper.SimpleMapper.Default.Inject(p1, p2);
-            Assert.IsNull(p1);
+            //ZK.Mapper.SimpleMapper.Default.Inject(p1, p2);
+            //Assert.IsNull(p1);
 
             // TODO
             //ZK.Mapper.SimpleMapper.Default.Inject(p2, p3);

@@ -17,7 +17,7 @@ namespace ZK.Mapper.Core
 
         public IRootMapper RootMapper { get; }
 
-        public object Map(object source, object target)
+        public object Map(object source,ref object target)
         {
             target = MapCore(source, target);
 

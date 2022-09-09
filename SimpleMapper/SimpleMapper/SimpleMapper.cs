@@ -69,20 +69,21 @@ namespace ZK.Mapper
             var typePair = TypePair.Create(source.GetType(), typeof(TTarget));
             var typePairMapper = MapperBaseDicts.GetOrAdd(typePair, pair => CreateMapper(pair));
 
-            var target = new TTarget();
-            target = (TTarget)typePairMapper.Map(source, target);
-            return target;
+            var target = (object)(new TTarget());
+            target = (TTarget)typePairMapper.Map(source,ref target);
+            return (TTarget)target;
         }
 
-        public object Map(Type sourceType, Type targetType, object source, object target = null)
+        public object Map(Type sourceType, Type targetType, object source,ref object target)
         {
             var typePair = TypePair.Create(sourceType, targetType);
             var typePairMapper = MapperBaseDicts.GetOrAdd(typePair, pair => CreateMapper(pair));
-            target = typePairMapper.Map(source, target);
+            target = typePairMapper.Map(source,ref target);
             return target;
         }
 
         public void Inject<TTarget, TSource>(TTarget target, TSource source)
+            where TTarget: class
         {
             if (source == null || target == null)
             {
@@ -91,8 +92,8 @@ namespace ZK.Mapper
 
             var typePair = TypePair.Create<TSource, TTarget>();
             var typePairMapper = MapperBaseDicts.GetOrAdd(typePair, pair => CreateMapper(pair));
-
-            typePairMapper.Map(source, target);
+            var targetObj = (object)target;
+            typePairMapper.Map(source, ref targetObj);
         }
 
         private MapperBase CreateMapper(TypePair typePair)

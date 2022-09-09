@@ -21,7 +21,7 @@ namespace SimpleMapper.Test
             Assert.AreEqual(src.Name, dst.Name);
             Assert.AreEqual(src.B.Age, dst.B.Age);
             Assert.IsNull(dst.B.AgeString);
-            //Assert.AreEqual(src.Point.X, dst.Point.X);
+            Assert.AreEqual(src.Point.X, dst.Point.X);
             Assert.IsNull(dst.Address);
         }
 
