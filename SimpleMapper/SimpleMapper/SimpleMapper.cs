@@ -34,6 +34,8 @@ namespace ZK.Mapper
 
         public ConcurrentDictionary<TypePair, Func<object, object, object>> PostActionDicts { get; } = new ConcurrentDictionary<TypePair, Func<object, object, object>>();
 
+        public ConcurrentDictionary<Type, bool> ImmutableTypeDict { get; } = new ConcurrentDictionary<Type, bool>();
+
         [Obsolete("改方法设置的mapper, 不能用于 InjectFrom")]
         public void SetCustomMap<TSource, TTarget>(Func<TSource, TTarget> func)
         {
@@ -79,15 +81,15 @@ namespace ZK.Mapper
             var mapperBase = MapperBaseDicts.GetOrAdd(typePair, pair => CreateMapper(pair));
 
             var target = new TTarget();
-            target = (TTarget)mapperBase.Map(source, target);
+            target = (TTarget)mapperBase.Map(source, target, new MapContext());
             return (TTarget)target;
         }
 
-        public object Map(Type sourceType, Type targetType, object source, object target)
+        public object Map(Type sourceType, Type targetType, object source, object target, MapContext mapContext)
         {
             var typePair = TypePair.Create(sourceType, targetType);
             var mapperBase = MapperBaseDicts.GetOrAdd(typePair, pair => CreateMapper(pair));
-            target = mapperBase.Map(source, target);
+            target = mapperBase.Map(source, target, mapContext);
             return target;
         }
 
@@ -100,7 +102,7 @@ namespace ZK.Mapper
 
             var typePair = TypePair.Create<TSource, TTarget>();
             var mapperBase = MapperBaseDicts.GetOrAdd(typePair, pair => CreateMapper(pair));
-            target = (TTarget)mapperBase.Map(source, target);
+            target = (TTarget)mapperBase.Map(source, target, new MapContext());
             return target;
         }
 

@@ -17,9 +17,9 @@ namespace ZK.Mapper.Core
 
         public IRootMapper RootMapper { get; }
 
-        public object Map(object source, object target)
+        public object Map(object source, object target, MapContext mapContext)
         {
-            target = MapCore(source, target);
+            target = MapCore(source, target, mapContext);
 
             Func<object, object, object> postFunc;
             if (RootMapper.PostActionDicts.TryGetValue(TypePair, out postFunc))
@@ -29,6 +29,6 @@ namespace ZK.Mapper.Core
             return target;
         }
 
-        protected abstract object MapCore(object source, object target);
+        protected abstract object MapCore(object source, object target, MapContext mapContext);
     }
 }

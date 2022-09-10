@@ -18,7 +18,7 @@ namespace ZK.Mapper.Mappers
             this.customFunc = customFunc;
         }
 
-        protected override object MapCore(object source, object target)
+        protected override object MapCore(object source, object target, MapContext mapContext)
         {
             // 不能使用 (TTarget)target, 当 TTarget 是 struct, 并且 target 是 null 时, 会报错
             var src = source is TSource ? (TSource)source : default;

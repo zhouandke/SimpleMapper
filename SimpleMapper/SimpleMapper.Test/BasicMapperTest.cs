@@ -6,7 +6,7 @@ namespace SimpleMapper.Test
 {
     // depend none
     [TestClass]
-    public class BasicTest
+    public class BasicMapperTest
     {
         ZK.Mapper.SimpleMapper simpleMapper = new ZK.Mapper.SimpleMapper();
 

@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
+using ZK.Mapper.Help;
 
 namespace SimpleMapper.Sample
 {
@@ -9,6 +10,15 @@ namespace SimpleMapper.Sample
     {
         static void Main(string[] args)
         {
+            var a = new A
+            {
+                MyProperty = new MyClass()
+            };
+
+            var b = a;
+
+
+            var k = TypeHelp.IsImmutable(typeof(DateTime?));
             var from = new
             {
                 A = Colors.Green,
@@ -39,4 +49,10 @@ namespace SimpleMapper.Sample
         Yellow = 2,
         Green = 3
     }
+
+     struct A
+    {
+        public MyClass MyProperty { get; set; }
+    }
+
 }

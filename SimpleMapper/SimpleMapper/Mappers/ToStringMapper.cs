@@ -14,7 +14,7 @@ namespace ZK.Mapper.Mappers
             : base(new TypePair(typeof(TSource), typeof(string)), rootMapper)
         { }
 
-        protected override object MapCore(object source, object target)
+        protected override object MapCore(object source, object target, MapContext mapContext)
         {
             return source?.ToString();
         }

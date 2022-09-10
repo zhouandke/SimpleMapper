@@ -9,6 +9,13 @@ namespace ZK.Mapper.Help
 {
     public static class TypeHelp
     {
+        public static bool IsImmutable(Type type)
+        {
+            // 没有可写属性, 也没有任何公开字段
+            return !type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(o => o.CanWrite).Any()
+                   && !type.GetFields(BindingFlags.Public | BindingFlags.Instance).Any();
+        }
+
         internal static bool IsNumberForEnumMap(Type type, out Type numberType)
         {
             if (type.IsPrimitive || type == typeof(decimal))

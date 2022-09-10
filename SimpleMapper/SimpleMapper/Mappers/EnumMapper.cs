@@ -38,7 +38,7 @@ namespace ZK.Mapper.Mappers
             }
         }
 
-        protected override object MapCore(object source, object target)
+        protected override object MapCore(object source, object target, MapContext mapContext)
         {
             if (TypePair.SourceType == TypePair.TargetType)
             {

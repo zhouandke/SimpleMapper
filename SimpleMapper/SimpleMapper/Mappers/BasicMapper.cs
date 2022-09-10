@@ -13,12 +13,12 @@ namespace ZK.Mapper.Mappers
     /// </summary>
     /// <typeparam name="TSource"></typeparam>
     /// <typeparam name="TTarget"></typeparam>
-    internal class ClassMapper<TSource, TTarget> : MapperBase
+    internal class BasicMapper<TSource, TTarget> : MapperBase
     {
-        private readonly Func<TSource, TTarget, TTarget> sameNameSameTypeCopy;
-        private readonly Func<TSource, TTarget, IRootMapper, TTarget> sameNameDifferentTypeCopy;
+        private readonly Func<TSource, TTarget, MapContext, TTarget> sameNameSameTypeCopy;
+        private readonly Func<TSource, TTarget, MapContext, IRootMapper, TTarget> sameNameDifferentTypeCopy;
 
-        public ClassMapper(IRootMapper rootMapper)
+        public BasicMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)
         {
             var sourceMembers = TypePair.SourceType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty).Where(o => o.CanRead).Select(o => new SourceTargetMemberInfo(o))
@@ -56,7 +56,7 @@ namespace ZK.Mapper.Mappers
         public string[] SameNameDifferentTypes { get; }
 
 
-        protected override object MapCore(object source, object target)
+        protected override object MapCore(object source, object target, MapContext mapContext)
         {
             if (TypePair.SourceType == TypePair.TargetType)
             {
@@ -76,15 +76,18 @@ namespace ZK.Mapper.Mappers
                 target = TypePair.TargetParameterlessCtor();
             }
 
-            return MapCoreGeneric((TSource)source, (TTarget)target);
+            return MapCoreGeneric((TSource)source, (TTarget)target, mapContext);
         }
 
-        private TTarget MapCoreGeneric(TSource source, TTarget target)
+        private TTarget MapCoreGeneric(TSource source, TTarget target, MapContext mapContext)
         {
-            target = sameNameSameTypeCopy(source, target);
-            target = sameNameDifferentTypeCopy(source, target, RootMapper);
+            target = sameNameSameTypeCopy(source, target, mapContext);
+            target = sameNameDifferentTypeCopy(source, target, mapContext, RootMapper);
             return target;
         }
+
+         
+
     }
 
 
@@ -98,7 +101,7 @@ namespace ZK.Mapper.Mappers
 
         public override MapperBase Build(TypePair typePair)
         {
-            var type = typeof(ClassMapper<,>).MakeGenericType(typePair.SourceType, typePair.TargetType);
+            var type = typeof(BasicMapper<,>).MakeGenericType(typePair.SourceType, typePair.TargetType);
             var mapper = (MapperBase)type.GetConstructor(ImplementMapperConstructorTypes).Invoke(new object[] { RootMapper });
             return mapper;
         }

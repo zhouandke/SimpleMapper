@@ -46,7 +46,7 @@ namespace ZK.Mapper.Mappers
             }
         }
 
-        protected override object MapCore(object source, object target)
+        protected override object MapCore(object source, object target, MapContext mapContext)
         {
             if (TypePair.SourceType == TypePair.TargetType)
             {
@@ -60,20 +60,20 @@ namespace ZK.Mapper.Mappers
             switch (mapperType)
             {
                 case MapperType.EnumerableToArray:
-                    return EnumerableToArray((IEnumerable<TSourceItem>)source, (TTargetItem[])target);
+                    return EnumerableToArray((IEnumerable<TSourceItem>)source, (TTargetItem[])target, mapContext);
                 case MapperType.EnumerableToList:
-                    return EnumerableToList((IEnumerable<TSourceItem>)source, (List<TTargetItem>)target);
+                    return EnumerableToList((IEnumerable<TSourceItem>)source, (List<TTargetItem>)target, mapContext);
                 case MapperType.EnumerableToCollection:
-                    return EnumerableToCollection((IEnumerable<TSourceItem>)source, (Collection<TTargetItem>)target);
+                    return EnumerableToCollection((IEnumerable<TSourceItem>)source, (Collection<TTargetItem>)target, mapContext);
                 case MapperType.EnumerableToHashSet:
-                    return EnumerableToHashSet((IEnumerable<TSourceItem>)source, (HashSet<TTargetItem>)target);
+                    return EnumerableToHashSet((IEnumerable<TSourceItem>)source, (HashSet<TTargetItem>)target, mapContext);
                 case MapperType.NotSupport:
                 default:
                     return target;
             }
         }
 
-        private TTargetItem[] EnumerableToArray(IEnumerable<TSourceItem> sources, TTargetItem[] targets)
+        private TTargetItem[] EnumerableToArray(IEnumerable<TSourceItem> sources, TTargetItem[] targets, MapContext mapContext)
         {
             var count = sources.Count();
             if (targets == null)
@@ -92,14 +92,14 @@ namespace ZK.Mapper.Mappers
                 {
                     break;
                 }
-                var target = RootMapper.Map(sourceItemType, targetItemType, source, null);
+                var target = RootMapper.Map(sourceItemType, targetItemType, source, null, mapContext);
                 targets[index] = (TTargetItem)target;
                 index++;
             }
             return targets;
         }
 
-        private List<TTargetItem> EnumerableToList(IEnumerable<TSourceItem> sources, List<TTargetItem> targets)
+        private List<TTargetItem> EnumerableToList(IEnumerable<TSourceItem> sources, List<TTargetItem> targets, MapContext mapContext)
         {
             if (targets != null)
             {
@@ -112,14 +112,14 @@ namespace ZK.Mapper.Mappers
 
             foreach (var source in sources)
             {
-                var target = RootMapper.Map(sourceItemType, targetItemType, source, null);
+                var target = RootMapper.Map(sourceItemType, targetItemType, source, null, mapContext);
                 targets.Add((TTargetItem)target);
             }
 
             return targets;
         }
 
-        private Collection<TTargetItem> EnumerableToCollection(IEnumerable<TSourceItem> sources, Collection<TTargetItem> targets)
+        private Collection<TTargetItem> EnumerableToCollection(IEnumerable<TSourceItem> sources, Collection<TTargetItem> targets, MapContext mapContext)
         {
             if (targets != null)
             {
@@ -132,14 +132,14 @@ namespace ZK.Mapper.Mappers
 
             foreach (var source in sources)
             {
-                var target = RootMapper.Map(sourceItemType, targetItemType, source, null);
+                var target = RootMapper.Map(sourceItemType, targetItemType, source, null, mapContext);
                 targets.Add((TTargetItem)target);
             }
 
             return targets;
         }
 
-        private HashSet<TTargetItem> EnumerableToHashSet(IEnumerable<TSourceItem> sources, HashSet<TTargetItem> targets)
+        private HashSet<TTargetItem> EnumerableToHashSet(IEnumerable<TSourceItem> sources, HashSet<TTargetItem> targets, MapContext mapContext)
         {
             if (targets != null)
             {
@@ -152,7 +152,7 @@ namespace ZK.Mapper.Mappers
 
             foreach (var source in sources)
             {
-                var target = RootMapper.Map(sourceItemType, targetItemType, source, null);
+                var target = RootMapper.Map(sourceItemType, targetItemType, source, null, mapContext);
                 if (target != null)
                 {
                     targets.Add((TTargetItem)target);

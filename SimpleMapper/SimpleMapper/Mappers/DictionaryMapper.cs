@@ -31,7 +31,7 @@ namespace ZK.Mapper.Mappers
         {
         }
 
-        protected override object MapCore(object source, object target)
+        protected override object MapCore(object source, object target, MapContext mapContext)
         {
             if (TypePair.SourceType == TypePair.TargetType)
             {
@@ -42,11 +42,11 @@ namespace ZK.Mapper.Mappers
                 return target ?? default(TTarget);
             }
 
-            return MapCore((IDictionary<TSourceKeyType, TSourceValueType>)source, (IDictionary<TTargetKeyType, TTargetValueType>)target);
+            return MapCore((IDictionary<TSourceKeyType, TSourceValueType>)source, (IDictionary<TTargetKeyType, TTargetValueType>)target, mapContext);
         }
 
 
-        private IDictionary<TTargetKeyType, TTargetValueType> MapCore(IDictionary<TSourceKeyType, TSourceValueType> sources, IDictionary<TTargetKeyType, TTargetValueType> targets)
+        private IDictionary<TTargetKeyType, TTargetValueType> MapCore(IDictionary<TSourceKeyType, TSourceValueType> sources, IDictionary<TTargetKeyType, TTargetValueType> targets, MapContext mapContext)
         {
             if (targets != null)
             {
@@ -59,7 +59,7 @@ namespace ZK.Mapper.Mappers
 
             foreach (var kvp in sources)
             {
-                var targetItemValue = RootMapper.Map(sourceValueType, targetValueType, kvp.Value, null);
+                var targetItemValue = RootMapper.Map(sourceValueType, targetValueType, kvp.Value, null, mapContext);
                 targets[kvp.Key] = (TTargetValueType)targetItemValue;
             }
 

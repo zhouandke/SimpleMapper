@@ -21,7 +21,7 @@ namespace ZK.Mapper.Help
             }
             else
             {
-                return () => Activator.CreateInstance(type);  
+                return () => Activator.CreateInstance(type);
             }
         }
 
@@ -32,11 +32,11 @@ namespace ZK.Mapper.Help
         /// <typeparam name="TTarget"></typeparam>
         /// <param name="memberPairs"></param>
         /// <returns></returns>
-        public static Func<TSource, TTarget, TTarget> GenerateSameNameSameTypeCopy<TSource, TTarget>(List<SourceTargetMemberPair> memberPairs)
+        public static Func<TSource, TTarget, MapContext, TTarget> GenerateSameNameSameTypeCopy<TSource, TTarget>(List<SourceTargetMemberPair> memberPairs)
         {
             if (memberPairs.Count == 0)
             {
-                return (source, target) => target;
+                return (source, target, mapContext) => target;
             }
 
             Type sourceType = typeof(TSource);
@@ -44,6 +44,7 @@ namespace ZK.Mapper.Help
 
             ParameterExpression sourceParam = Expression.Parameter(sourceType, "source");
             ParameterExpression targetParam = Expression.Parameter(targetType, "target");
+            ParameterExpression mapContextParam = Expression.Parameter(typeof(MapContext), "mapContext");
 
             var binaryExpressions = new List<Expression>();
             foreach (var memberPair in memberPairs)
@@ -61,7 +62,7 @@ namespace ZK.Mapper.Help
             binaryExpressions.Add(targetParam);
 
             var block = Expression.Block(binaryExpressions);
-            return Expression.Lambda<Func<TSource, TTarget, TTarget>>(block, new[] { sourceParam, targetParam }).Compile();
+            return Expression.Lambda<Func<TSource, TTarget, MapContext, TTarget>>(block, new[] { sourceParam, targetParam, mapContextParam }).Compile();
         }
 
         /// <summary>
@@ -71,11 +72,11 @@ namespace ZK.Mapper.Help
         /// <typeparam name="TTarget"></typeparam>
         /// <param name="memberPairs"></param>
         /// <returns></returns>
-        internal static Func<TSource, TTarget, IRootMapper, TTarget> GenerateSameNameDifferentTypeCopy<TSource, TTarget>(List<SourceTargetMemberPair> memberPairs)
+        internal static Func<TSource, TTarget, MapContext, IRootMapper, TTarget> GenerateSameNameDifferentTypeCopy<TSource, TTarget>(List<SourceTargetMemberPair> memberPairs)
         {
             if (memberPairs.Count == 0)
             {
-                return (source, target, rootMapper) => target;
+                return (source, target, mapContext, rootMapper) => target;
             }
 
             Type sourceType = typeof(TSource);
@@ -84,16 +85,17 @@ namespace ZK.Mapper.Help
 
             ParameterExpression sourceParam = Expression.Parameter(sourceType, "source");
             ParameterExpression targetParam = Expression.Parameter(targetType, "target");
+            ParameterExpression mapContextParam = Expression.Parameter(typeof(MapContext), "mapContext");
             ParameterExpression rootMapperParam = Expression.Parameter(rootMapperType, "rootMapper");
             // 获取 IRootMapper.Map 方法
-            MethodInfo methodInfo = typeof(IRootMapper).GetMethod("Map", new Type[] { typeof(Type), typeof(Type), typeof(object), typeof(object) });
+            MethodInfo methodInfo = typeof(IRootMapper).GetMethod("Map", new Type[] { typeof(Type), typeof(Type), typeof(object), typeof(object), typeof(MapContext) });
 
             var binaryExpressions = new List<Expression>();
             foreach (var memberPair in memberPairs)
             {
                 // Generate code like:
-                // target.targetMember = (targetMemberType)rootMapper.Map(sourceMemberType, targetMemberType, (object)source.sourceMember, (object)null)
-                // target.Point1 = (Point)rootMapper.Map(typeof(Point?), typeof(Point), source.Point1, null)
+                // target.targetMember = (targetMemberType)rootMapper.Map(sourceMemberType, targetMemberType, (object)source.sourceMember, (object)null, mapContext)
+                // target.Point1 = (Point)rootMapper.Map(typeof(Point?), typeof(Point), source.Point1, null, mapContext)
                 MemberExpression left = memberPair.TargetMember.MemberType == MemberTypes.Property ?
                     Expression.Property(targetParam, targetType.GetProperty(memberPair.TargetMember.Name)) : Expression.Field(targetParam, targetType.GetField(memberPair.TargetMember.Name));
                 MemberExpression sourceMember = memberPair.SourceMember.MemberType == MemberTypes.Property ?
@@ -103,7 +105,7 @@ namespace ZK.Mapper.Help
                 var targetMemberType = Expression.Constant(memberPair.TargetMember.Type, typeof(Type));
                 var sourceObj = Expression.Convert(sourceMember, typeof(object));
                 var targetObj = Expression.Constant(null, typeof(object));
-                MethodCallExpression callExpression = Expression.Call(rootMapperParam, methodInfo, sourceMemberType, targetMemberType, sourceObj, targetObj);
+                MethodCallExpression callExpression = Expression.Call(rootMapperParam, methodInfo, sourceMemberType, targetMemberType, sourceObj, targetObj, mapContextParam);
                 // 将 Map() 方法返回的结果强转为 targetMemberType
                 var convertExpression = Expression.Convert(callExpression, memberPair.TargetMember.Type);
                 binaryExpressions.Add(Expression.Assign(left, convertExpression));
@@ -111,7 +113,7 @@ namespace ZK.Mapper.Help
             binaryExpressions.Add(targetParam); // work as "return value;"
 
             var block = Expression.Block(binaryExpressions);
-            return Expression.Lambda<Func<TSource, TTarget, IRootMapper, TTarget>>(block, new[] { sourceParam, targetParam, rootMapperParam }).Compile();
+            return Expression.Lambda<Func<TSource, TTarget, MapContext, IRootMapper, TTarget>>(block, new[] { sourceParam, targetParam, mapContextParam, rootMapperParam }).Compile();
         }
     }
 }
