@@ -50,7 +50,7 @@ namespace ZK.Mapper.Mappers
                     sameNameDifferentTypes.Add(new SourceTargetMemberPair(sourceMember, targetMember));
                 }
 
-                if (targetMember.Type == sourceMember.Type && IsImmutableType(targetMember.Type))
+                if (targetMember.Type == sourceMember.Type && RootMapper.ImmutableTypeManage.IsImmutable(targetMember.Type))
                 {
                     directAssignMembers.Add(new SourceTargetMemberPair(sourceMember, targetMember));
                 }
@@ -132,12 +132,6 @@ namespace ZK.Mapper.Mappers
             target = mapThenAssign(source, target, mapContext, RootMapper);
             return target;
         }
-
-        private bool IsImmutableType(Type type)
-        {
-            return RootMapper.ImmutableTypeDict.GetOrAdd(type, t => TypeHelp.IsIEnumerable(t));
-        }
-
     }
 
 

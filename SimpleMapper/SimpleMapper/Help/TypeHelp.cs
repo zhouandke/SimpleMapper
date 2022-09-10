@@ -9,9 +9,13 @@ namespace ZK.Mapper.Help
 {
     public static class TypeHelp
     {
+        /// <summary>
+        /// 没有可写属性, 也没有任何公开字段, 就认为是不可变类型
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public static bool IsImmutable(Type type)
         {
-            // 没有可写属性, 也没有任何公开字段
             return !type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(o => o.CanWrite).Any()
                    && !type.GetFields(BindingFlags.Public | BindingFlags.Instance).Any();
         }

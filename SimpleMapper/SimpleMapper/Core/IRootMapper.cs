@@ -19,9 +19,9 @@ namespace ZK.Mapper.Core
         ConcurrentDictionary<TypePair, Func<object, object, object>> PostActionDicts { get; }
 
         /// <summary>
-        /// 是否是不可变类型
+        /// 判断某个 Type 是否不可变
         /// </summary>
-        ConcurrentDictionary<Type, bool> ImmutableTypeDict { get; }
+        ImmutableTypeManage ImmutableTypeManage { get; }
 
         /// <summary>
         /// 1. 使用 source 的属性赋值到 一个新建的Target(前提是有默认构造器), 入参 target 必须设为null;  

@@ -11,16 +11,7 @@ namespace SimpleMapper.Sample
     {
         static void Main(string[] args)
         {
-            var a = new A
-            {
-                MyProperty = new MyClass()
-            };
-
-            var b = a;
-            var u = object.ReferenceEquals(b.MyProperty, a.MyProperty);
-
-            var k = TypeHelp.IsImmutable(typeof(KeyValuePair<int, int>));
-            var from = new
+            var src = new
             {
                 A = Colors.Green,
                 B = Colors.Red,
@@ -28,7 +19,7 @@ namespace SimpleMapper.Sample
                 D = 18
             };
 
-            var to = ZK.Mapper.SimpleMapper.Default.Map<MyClass>(from);
+            var dst = ZK.Mapper.SimpleMapper.Default.Map<MyClass>(src);
         }
     }
 
@@ -50,10 +41,4 @@ namespace SimpleMapper.Sample
         Yellow = 2,
         Green = 3
     }
-
-     struct A
-    {
-        public MyClass MyProperty { get; set; }
-    }
-
 }

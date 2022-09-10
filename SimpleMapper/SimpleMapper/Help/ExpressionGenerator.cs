@@ -25,6 +25,12 @@ namespace ZK.Mapper.Help
             }
         }
 
+        /// <summary>
+        /// 编译生成 强转类型的方法
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TTarget"></typeparam>
+        /// <returns></returns>
         public static Func<TSource, TTarget> BuildConvert<TSource, TTarget>()
         {
             var sourceType = typeof(TSource);

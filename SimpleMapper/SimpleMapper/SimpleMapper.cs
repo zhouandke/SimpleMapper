@@ -34,7 +34,17 @@ namespace ZK.Mapper
 
         public ConcurrentDictionary<TypePair, Func<object, object, object>> PostActionDicts { get; } = new ConcurrentDictionary<TypePair, Func<object, object, object>>();
 
-        public ConcurrentDictionary<Type, bool> ImmutableTypeDict { get; } = new ConcurrentDictionary<Type, bool>();
+        public ImmutableTypeManage ImmutableTypeManage { get; } = new ImmutableTypeManage();
+
+        /// <summary>
+        /// 设定某个 Type 为不可变类型, 这个主要影响深度拷贝时, 某个 Type 是否直接拷贝
+        /// 默认是: 没有可写属性, 也没有任何公开字段, 就认为是不可变类型
+        /// </summary>
+        /// <param name="type"></param>
+        public void SetImmutableType(Type type)
+        {
+            ImmutableTypeManage.RegisterImmutableType(type);
+        }
 
         [Obsolete("改方法设置的mapper, 不能用于 InjectFrom")]
         public void SetCustomMap<TSource, TTarget>(Func<TSource, TTarget> func)
