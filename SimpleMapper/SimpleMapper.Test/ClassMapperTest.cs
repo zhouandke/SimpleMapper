@@ -2,7 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SimpleMapper.Test
 {
-    // denpend on BasicTest
+    // denpend on MapperFrameTest
     [TestClass]
     public class ClassMapperTest
     {

@@ -48,7 +48,7 @@ namespace ZK.Mapper.Mappers
 
         protected override object MapCore(object source, object target, MapContext mapContext)
         {
-            if (TypePair.SourceType == TypePair.TargetType)
+            if (!mapContext.DeepCopy && TypePair.SourceType == TypePair.TargetType)
             {
                 return source;
             }
@@ -76,7 +76,11 @@ namespace ZK.Mapper.Mappers
         private TTargetItem[] EnumerableToArray(IEnumerable<TSourceItem> sources, TTargetItem[] targets, MapContext mapContext)
         {
             var count = sources.Count();
-            if (targets == null)
+            if (mapContext.DeepCopy)
+            {
+                targets = new TTargetItem[count];
+            }
+            else if (targets == null)
             {
                 targets = new TTargetItem[count];
             }

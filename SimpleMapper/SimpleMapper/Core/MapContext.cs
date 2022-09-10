@@ -2,6 +2,11 @@
 {
     public class MapContext
     {
-        public bool DeepClone { get; set; }
+        public MapContext(bool deepCopy = false)
+        {
+            DeepCopy = deepCopy;
+        }
+
+        public bool DeepCopy { get; }
     }
 }

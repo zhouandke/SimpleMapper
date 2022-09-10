@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace SimpleMapper.Test
 {
-    // denpend on BasicTest
+    // denpend on MapperFrameTest
     [TestClass]
     public class EnumerableMapperTest
     {

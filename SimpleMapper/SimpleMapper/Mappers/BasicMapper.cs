@@ -15,8 +15,11 @@ namespace ZK.Mapper.Mappers
     /// <typeparam name="TTarget"></typeparam>
     internal class BasicMapper<TSource, TTarget> : MapperBase
     {
-        private readonly Func<TSource, TTarget, MapContext, TTarget> sameNameSameTypeCopy;
-        private readonly Func<TSource, TTarget, MapContext, IRootMapper, TTarget> sameNameDifferentTypeCopy;
+        private readonly Func<TSource, TTarget, MapContext, TTarget> sameNameSameTypeAssign;
+        private readonly Func<TSource, TTarget, MapContext, IRootMapper, TTarget> sameNameDifferentTypeAssign;
+
+        private readonly Func<TSource, TTarget, MapContext, TTarget> directAssign;
+        private readonly Func<TSource, TTarget, MapContext, IRootMapper, TTarget> mapThenAssign;
 
         public BasicMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)
@@ -28,6 +31,8 @@ namespace ZK.Mapper.Mappers
 
             var sameNameSameTypes = new List<SourceTargetMemberPair>();
             var sameNameDifferentTypes = new List<SourceTargetMemberPair>();
+            var directAssignMembers = new List<SourceTargetMemberPair>();
+            var mapThenAssignMembers = new List<SourceTargetMemberPair>(); ;
             foreach (var sourceMember in sourceMembers)
             {
                 var targetMember = targetMembers.Find(o => o.Name == sourceMember.Name);
@@ -35,6 +40,7 @@ namespace ZK.Mapper.Mappers
                 {
                     continue;
                 }
+
                 if (targetMember.Type == sourceMember.Type)
                 {
                     sameNameSameTypes.Add(new SourceTargetMemberPair(sourceMember, targetMember));
@@ -43,9 +49,21 @@ namespace ZK.Mapper.Mappers
                 {
                     sameNameDifferentTypes.Add(new SourceTargetMemberPair(sourceMember, targetMember));
                 }
+
+                if (targetMember.Type == sourceMember.Type && IsImmutableType(targetMember.Type))
+                {
+                    directAssignMembers.Add(new SourceTargetMemberPair(sourceMember, targetMember));
+                }
+                else
+                {
+                    mapThenAssignMembers.Add(new SourceTargetMemberPair(sourceMember, targetMember));
+                }
             }
-            sameNameSameTypeCopy = ExpressionGenerator.GenerateSameNameSameTypeCopy<TSource, TTarget>(sameNameSameTypes);
-            sameNameDifferentTypeCopy = ExpressionGenerator.GenerateSameNameDifferentTypeCopy<TSource, TTarget>(sameNameDifferentTypes);
+            sameNameSameTypeAssign = ExpressionGenerator.GenerateDirectAssign<TSource, TTarget>(sameNameSameTypes);
+            sameNameDifferentTypeAssign = ExpressionGenerator.GenerateMapThenAssign<TSource, TTarget>(sameNameDifferentTypes);
+
+            directAssign = ExpressionGenerator.GenerateDirectAssign<TSource, TTarget>(directAssignMembers);
+            mapThenAssign = ExpressionGenerator.GenerateMapThenAssign<TSource, TTarget>(mapThenAssignMembers);
 
             SameNameSameTypes = sameNameSameTypes.Select(o => o.SourceMember.Name).ToArray();
             SameNameDifferentTypes = sameNameDifferentTypes.Select(o => o.TargetMember.Name).ToArray();
@@ -58,13 +76,19 @@ namespace ZK.Mapper.Mappers
 
         protected override object MapCore(object source, object target, MapContext mapContext)
         {
-            if (TypePair.SourceType == TypePair.TargetType)
-            {
-                return source;
-            }
             if (source == null)
             {
                 return target ?? default(TTarget);
+            }
+
+            return mapContext.DeepCopy ? DeepCopy(source, target, mapContext) : ShallowCopy(source, target, mapContext);
+        }
+
+        protected object ShallowCopy(object source, object target, MapContext mapContext)
+        {
+            if (TypePair.SourceType == TypePair.TargetType)
+            {
+                return source;
             }
 
             if (target == null)
@@ -76,17 +100,43 @@ namespace ZK.Mapper.Mappers
                 target = TypePair.TargetParameterlessCtor();
             }
 
-            return MapCoreGeneric((TSource)source, (TTarget)target, mapContext);
+            return ShallowCopyGeneric((TSource)source, (TTarget)target, mapContext);
         }
 
-        private TTarget MapCoreGeneric(TSource source, TTarget target, MapContext mapContext)
+        private TTarget ShallowCopyGeneric(TSource source, TTarget target, MapContext mapContext)
         {
-            target = sameNameSameTypeCopy(source, target, mapContext);
-            target = sameNameDifferentTypeCopy(source, target, mapContext, RootMapper);
+            target = sameNameSameTypeAssign(source, target, mapContext);
+            target = sameNameDifferentTypeAssign(source, target, mapContext, RootMapper);
             return target;
         }
 
-         
+        protected object DeepCopy(object source, object target, MapContext mapContext)
+        {
+            if (TypePair.SourceType == TypePair.TargetType && TypeHelp.IsImmutable(TypePair.SourceType))
+            {
+                return source;
+            }
+
+            if (!TypePair.TargetTypeHasParameterlessCtor)
+            {
+                return target ?? default(TTarget);
+            }
+            target = TypePair.TargetParameterlessCtor();
+
+            return DeepCopyGeneric((TSource)source, (TTarget)target, mapContext);
+        }
+
+        protected TTarget DeepCopyGeneric(TSource source, TTarget target, MapContext mapContext)
+        {
+            target = directAssign(source, target, mapContext);
+            target = mapThenAssign(source, target, mapContext, RootMapper);
+            return target;
+        }
+
+        private bool IsImmutableType(Type type)
+        {
+            return RootMapper.ImmutableTypeDict.GetOrAdd(type, t => TypeHelp.IsIEnumerable(t));
+        }
 
     }
 

@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 
 namespace SimpleMapper.Test
 {
-    // denpend on BasicTest
+    // denpend on MapperFrameTest
     [TestClass]
     public class DictionaryMapperTest
     {

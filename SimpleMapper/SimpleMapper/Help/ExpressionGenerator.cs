@@ -25,14 +25,23 @@ namespace ZK.Mapper.Help
             }
         }
 
+        public static Func<TSource, TTarget> BuildConvert<TSource, TTarget>()
+        {
+            var sourceType = typeof(TSource);
+            var targetType = typeof(TTarget);
+            var sourceParam = Expression.Parameter(sourceType, "o");
+            var convertExpr = Expression.Convert(sourceParam, targetType);
+            return Expression.Lambda<Func<TSource, TTarget>>(convertExpr, new[] { sourceParam }).Compile();
+        }
+
         /// <summary>
-        /// 生成代码：将 TSource 里 同名同类型的属性拷贝至 Target
+        /// 生成代码：将 TSource 里 同名的属性直接赋值到 Target
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <typeparam name="TTarget"></typeparam>
         /// <param name="memberPairs"></param>
         /// <returns></returns>
-        public static Func<TSource, TTarget, MapContext, TTarget> GenerateSameNameSameTypeCopy<TSource, TTarget>(List<SourceTargetMemberPair> memberPairs)
+        public static Func<TSource, TTarget, MapContext, TTarget> GenerateDirectAssign<TSource, TTarget>(List<SourceTargetMemberPair> memberPairs)
         {
             if (memberPairs.Count == 0)
             {
@@ -66,13 +75,13 @@ namespace ZK.Mapper.Help
         }
 
         /// <summary>
-        /// 生成代码：将 TSource 里 同名不同类型的属性 使用IRootMapper.Map转换后赋值给 Target
+        /// 生成代码：将 TSource 里 同名的属性 使用IRootMapper.Map转换后赋值给 Target
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <typeparam name="TTarget"></typeparam>
         /// <param name="memberPairs"></param>
         /// <returns></returns>
-        internal static Func<TSource, TTarget, MapContext, IRootMapper, TTarget> GenerateSameNameDifferentTypeCopy<TSource, TTarget>(List<SourceTargetMemberPair> memberPairs)
+        internal static Func<TSource, TTarget, MapContext, IRootMapper, TTarget> GenerateMapThenAssign<TSource, TTarget>(List<SourceTargetMemberPair> memberPairs)
         {
             if (memberPairs.Count == 0)
             {

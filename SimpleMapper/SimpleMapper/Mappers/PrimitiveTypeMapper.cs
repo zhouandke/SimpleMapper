@@ -17,9 +17,30 @@ namespace ZK.Mapper.Mappers
         private static readonly Type targetPrimitveType = typeof(TTargetPrimitve);
         private static readonly bool isTargetNullable = TypeHelp.IsNullable(typeof(TTarget));
 
+        private Func<TSource, TTarget> convert;
+
         public PrimitiveTypeMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)
         {
+            // bool 与 其他 number 类型转换确实很麻烦
+            if (typeof(TSourcePrimitve) == typeof(bool) || typeof(TTargetPrimitve) == typeof(bool))
+            {
+                convert = src =>
+                {
+                    if (isTargetNullable)
+                    {
+                        return (TTarget)Convert.ChangeType(src, targetPrimitveType);
+                    }
+                    else
+                    {
+                        return (TTarget)Convert.ChangeType(src, targetType);
+                    }
+                };
+            }
+            else
+            {
+                convert = ExpressionGenerator.BuildConvert<TSource, TTarget>();
+            }
         }
 
         protected override object MapCore(object source, object target, MapContext mapContext)
@@ -33,15 +54,17 @@ namespace ZK.Mapper.Mappers
                 return target ?? default(TTarget);
             }
 
-            if (isTargetNullable)
-            {
-                // return (TTarget)source; // will throw  Unable to cast object of type 'System.Single' to type 'System.Double'.  why ?
-                return Convert.ChangeType(source, targetPrimitveType);
-            }
-            else
-            {
-                return Convert.ChangeType(source, targetType); // Convert.ChangeType not support Nullable<>
-            }
+            return convert((TSource)source);
+
+            //if (isTargetNullable)
+            //{
+            //    // return (TTarget)source; // will throw  Unable to cast object of type 'System.Single' to type 'System.Double'.  why ?
+            //    return Convert.ChangeType(source, targetPrimitveType);
+            //}
+            //else
+            //{
+            //    return Convert.ChangeType(source, targetType); // Convert.ChangeType not support Nullable<>
+            //}
         }
     }
 

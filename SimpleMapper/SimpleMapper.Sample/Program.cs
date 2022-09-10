@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -16,9 +17,9 @@ namespace SimpleMapper.Sample
             };
 
             var b = a;
+            var u = object.ReferenceEquals(b.MyProperty, a.MyProperty);
 
-
-            var k = TypeHelp.IsImmutable(typeof(DateTime?));
+            var k = TypeHelp.IsImmutable(typeof(KeyValuePair<int, int>));
             var from = new
             {
                 A = Colors.Green,

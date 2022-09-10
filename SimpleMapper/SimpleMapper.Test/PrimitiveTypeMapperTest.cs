@@ -2,7 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SimpleMapper.Test
 {
-    // denpend on BasicTest, PrimitiveTypeMapperTest
+    // denpend on MapperFrameTest, PrimitiveTypeMapperTest
     [TestClass]
     public class PrimitiveTypeMapperTest
     {
@@ -53,12 +53,7 @@ namespace SimpleMapper.Test
             Assert.AreEqual(src.Scores.Length, dst.Scores.Length);
             Assert.AreEqual(1, dst.Scores[0]);
             Assert.AreEqual(0, dst.Scores[1]);
-            // TODO: Bug?
-            //var d = (decimal?)3.9;
-            //var v1 = (int)d; // 3
-            //var v2 = System.Convert.ChangeType(d, typeof(int)); //4
-            Assert.AreEqual(4, dst.Scores[2]);
-
+            Assert.AreEqual(3, dst.Scores[2]);
         }
 
         public class A

@@ -85,6 +85,22 @@ namespace ZK.Mapper
             return (TTarget)target;
         }
 
+        public TTarget MapAsDeepCopy<TTarget>(object source)
+            where TTarget : new()
+        {
+            if (source == null)
+            {
+                return default;
+            }
+
+            var typePair = TypePair.Create(source.GetType(), typeof(TTarget));
+            var mapperBase = MapperBaseDicts.GetOrAdd(typePair, pair => CreateMapper(pair));
+
+            var target = new TTarget();
+            target = (TTarget)mapperBase.Map(source, target, new MapContext(true));
+            return (TTarget)target;
+        }
+
         public object Map(Type sourceType, Type targetType, object source, object target, MapContext mapContext)
         {
             var typePair = TypePair.Create(sourceType, targetType);
