@@ -100,11 +100,12 @@ namespace ZK.Mapper.Mappers
 
             if (target == null)
             {
-                if (!TypePair.TargetTypeHasParameterlessCtor)
+                var targetParameterlessCtor = TypePair.TargetParameterlessCtor;
+                if (targetParameterlessCtor == null)
                 {
                     return target ?? default(TTarget);
                 }
-                target = TypePair.TargetParameterlessCtor();
+                target = targetParameterlessCtor();
             }
 
             return ShallowCopyGeneric((TSource)source, (TTarget)target, mapContext);
@@ -124,11 +125,12 @@ namespace ZK.Mapper.Mappers
                 return source;
             }
 
-            if (!TypePair.TargetTypeHasParameterlessCtor)
+            var targetParameterlessCtor = TypePair.TargetParameterlessCtor;
+            if (targetParameterlessCtor == null)
             {
                 return target ?? default(TTarget);
             }
-            target = TypePair.TargetParameterlessCtor();
+            target = targetParameterlessCtor();
 
             return DeepCopyGeneric((TSource)source, (TTarget)target, mapContext);
         }

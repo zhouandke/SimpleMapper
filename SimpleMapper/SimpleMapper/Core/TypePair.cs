@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using ZK.Mapper.Help;
 
@@ -11,13 +12,11 @@ namespace ZK.Mapper.Core
     public class TypePair
     {
         private readonly int hashCode;
-        private Func<object> targetParameterlessCtor;
 
         public TypePair(Type sourceType, Type targetType)
         {
             SourceType = sourceType;
             TargetType = targetType;
-            TargetTypeHasParameterlessCtor = TypeHelp.HasParameterlessCtor(TargetType);
             hashCode = SourceType.GetHashCode() ^ TargetType.GetHashCode();
         }
 
@@ -25,19 +24,27 @@ namespace ZK.Mapper.Core
 
         public Type TargetType { get; }
 
-        public bool TargetTypeHasParameterlessCtor { get; }
-
         public Func<object> TargetParameterlessCtor
         {
             get
             {
-                if (!TargetTypeHasParameterlessCtor)
+                if (targetParameterlessCtors.TryGetValue(this, out var ctor))
                 {
+                    return ctor;
+                }
+
+                if (!TypeHelp.HasParameterlessCtor(TargetType))
+                {
+                    lock (targetParameterlessCtors)
+                    {
+                        targetParameterlessCtors[this] = null;
+                    }
                     return null;
                 }
-                if (targetParameterlessCtor == null)
+                var targetParameterlessCtor = ExpressionGenerator.CreateParameterlessCtor(TargetType);
+                lock (targetParameterlessCtors)
                 {
-                    targetParameterlessCtor = ExpressionGenerator.CreateParameterlessCtor(TargetType);
+                    targetParameterlessCtors[this] = targetParameterlessCtor;
                 }
                 return targetParameterlessCtor;
             }
@@ -68,5 +75,8 @@ namespace ZK.Mapper.Core
         {
             return new TypePair(sourceType, targetType);
         }
+
+        private static readonly Dictionary<TypePair, Func<object>> targetParameterlessCtors = new Dictionary<TypePair, Func<object>>();
+
     }
 }

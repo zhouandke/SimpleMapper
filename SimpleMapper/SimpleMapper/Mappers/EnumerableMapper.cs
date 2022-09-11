@@ -94,13 +94,15 @@ namespace ZK.Mapper.Mappers
 
         private List<TTargetItem> EnumerableToList(IEnumerable<TSourceItem> sources, List<TTargetItem> targets, MapContext mapContext)
         {
+            var count = sources.Count();
             if (targets != null)
             {
                 targets.Clear();
+                targets.Capacity = count;
             }
             else
             {
-                targets = new List<TTargetItem>();
+                targets = new List<TTargetItem>(count);
             }
 
             foreach (var source in sources)
