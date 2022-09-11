@@ -10,9 +10,9 @@ namespace ZK.Mapper.Core
     {
         private ConcurrentDictionary<Type, bool> ImmutableTypeDict { get; } = new ConcurrentDictionary<Type, bool>();
 
-        public void RegisterImmutableType(Type type)
+        public void RegisterImmutableType(Type type, bool isImmutable)
         {
-            ImmutableTypeDict[type] = true;
+            ImmutableTypeDict[type] = isImmutable;
         }
 
         public bool IsImmutable(Type type)
@@ -22,7 +22,7 @@ namespace ZK.Mapper.Core
                 type = type.GetGenericTypeDefinition();
             }
 
-            return ImmutableTypeDict.GetOrAdd(type, t => TypeHelp.IsIEnumerable(t)); ;
+            return ImmutableTypeDict.GetOrAdd(type, t => TypeHelp.IsImmutable(t)); ;
         }
     }
 }

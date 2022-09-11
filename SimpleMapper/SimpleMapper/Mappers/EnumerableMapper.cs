@@ -76,18 +76,7 @@ namespace ZK.Mapper.Mappers
         private TTargetItem[] EnumerableToArray(IEnumerable<TSourceItem> sources, TTargetItem[] targets, MapContext mapContext)
         {
             var count = sources.Count();
-            if (mapContext.DeepCopy)
-            {
-                targets = new TTargetItem[count];
-            }
-            else if (targets == null)
-            {
-                targets = new TTargetItem[count];
-            }
-            if (targets.Length < count)
-            {
-                count = targets.Length;
-            }
+            targets = new TTargetItem[count];
 
             int index = 0;
             foreach (var source in sources)

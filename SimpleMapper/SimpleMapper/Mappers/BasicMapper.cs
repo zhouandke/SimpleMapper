@@ -65,13 +65,20 @@ namespace ZK.Mapper.Mappers
             directAssign = ExpressionGenerator.GenerateDirectAssign<TSource, TTarget>(directAssignMembers);
             mapThenAssign = ExpressionGenerator.GenerateMapThenAssign<TSource, TTarget>(mapThenAssignMembers);
 
-            SameNameSameTypes = sameNameSameTypes.Select(o => o.SourceMember.Name).ToArray();
-            SameNameDifferentTypes = sameNameDifferentTypes.Select(o => o.TargetMember.Name).ToArray();
+            SameNameSameTypeMembers = sameNameSameTypes.Select(o => o.SourceMember.Name).ToArray();
+            SameNameDifferentTypeMembers = sameNameDifferentTypes.Select(o => o.TargetMember.Name).ToArray();
+            DirectAssignMembers = directAssignMembers.Select(o => o.SourceMember.Name).ToArray();
+            MapThenAssignMembers = mapThenAssignMembers.Select(o => o.SourceMember.Name).ToArray();
         }
 
-        public string[] SameNameSameTypes { get; }
+        public string[] SameNameSameTypeMembers { get; }
 
-        public string[] SameNameDifferentTypes { get; }
+        public string[] SameNameDifferentTypeMembers { get; }
+
+
+        public string[] DirectAssignMembers { get; }
+
+        public string[] MapThenAssignMembers { get; }
 
 
         protected override object MapCore(object source, object target, MapContext mapContext)
@@ -112,7 +119,7 @@ namespace ZK.Mapper.Mappers
 
         protected object DeepCopy(object source, object target, MapContext mapContext)
         {
-            if (TypePair.SourceType == TypePair.TargetType && TypeHelp.IsImmutable(TypePair.SourceType))
+            if (TypePair.SourceType == TypePair.TargetType && RootMapper.ImmutableTypeManage.IsImmutable(TypePair.SourceType))
             {
                 return source;
             }
@@ -135,9 +142,9 @@ namespace ZK.Mapper.Mappers
     }
 
 
-    internal class ClassMapperBuilder : MapperBuilderBase
+    internal class BasicMapperBuilder : MapperBuilderBase
     {
-        public ClassMapperBuilder(IRootMapper rootMapper) : base(rootMapper)
+        public BasicMapperBuilder(IRootMapper rootMapper) : base(rootMapper)
         {
         }
 

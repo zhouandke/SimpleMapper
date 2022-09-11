@@ -22,7 +22,7 @@ namespace ZK.Mapper
                 new DictionaryMapperBuilder(this),
                 new EnumerableMapperBuilder(this),
                 new ToStringMapperBuilder(this),
-                new ClassMapperBuilder(this),
+                new BasicMapperBuilder(this),
             }
             .OrderByDescending(o => o.Priority)
             .ToArray();
@@ -37,13 +37,14 @@ namespace ZK.Mapper
         public ImmutableTypeManage ImmutableTypeManage { get; } = new ImmutableTypeManage();
 
         /// <summary>
-        /// 设定某个 Type 为不可变类型, 这个主要影响深度拷贝时, 某个 Type 是否直接拷贝
+        /// 设定某个 Type 为不可变类型
+        /// 这个主要影响深度拷贝时, 某个 Type 是否直接拷贝
         /// 默认是: 没有可写属性, 也没有任何公开字段, 就认为是不可变类型
         /// </summary>
         /// <param name="type"></param>
-        public void SetImmutableType(Type type)
+        public void SetImmutableType(Type type, bool isImmutable)
         {
-            ImmutableTypeManage.RegisterImmutableType(type);
+            ImmutableTypeManage.RegisterImmutableType(type, isImmutable);
         }
 
         [Obsolete("改方法设置的mapper, 不能用于 InjectFrom")]
