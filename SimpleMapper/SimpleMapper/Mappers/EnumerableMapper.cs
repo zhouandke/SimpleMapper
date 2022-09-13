@@ -78,6 +78,9 @@ namespace ZK.Mapper.Mappers
             var count = sources.Count();
             targets = new TTargetItem[count];
 
+            var typePair = TypePair.Create<TSourceItem, TTargetItem>();
+            MapperBase mapper = null;
+            object target;
             int index = 0;
             foreach (var source in sources)
             {
@@ -85,7 +88,16 @@ namespace ZK.Mapper.Mappers
                 {
                     break;
                 }
-                var target = RootMapper.Map(sourceItemType, targetItemType, source, null, mapContext);
+                if (mapper != null)
+                {
+                    target = mapper.Map(source, null, mapContext);
+                }
+                else
+                {
+                    target = RootMapper.Map(sourceItemType, targetItemType, source, null, mapContext);
+                    mapper = RootMapper.MapperBaseDicts[typePair];
+                }
+
                 targets[index] = (TTargetItem)target;
                 index++;
             }
@@ -105,9 +117,20 @@ namespace ZK.Mapper.Mappers
                 targets = new List<TTargetItem>(count);
             }
 
+            var typePair = TypePair.Create<TSourceItem, TTargetItem>();
+            MapperBase mapper = null;
+            object target;
             foreach (var source in sources)
             {
-                var target = RootMapper.Map(sourceItemType, targetItemType, source, null, mapContext);
+                if (mapper != null)
+                {
+                    target = mapper.Map(source, null, mapContext);
+                }
+                else
+                {
+                    target = RootMapper.Map(sourceItemType, targetItemType, source, null, mapContext);
+                    mapper = RootMapper.MapperBaseDicts[typePair];
+                }
                 targets.Add((TTargetItem)target);
             }
 
@@ -125,9 +148,20 @@ namespace ZK.Mapper.Mappers
                 targets = new Collection<TTargetItem>();
             }
 
+            var typePair = TypePair.Create<TSourceItem, TTargetItem>();
+            MapperBase mapper = null;
+            object target;
             foreach (var source in sources)
             {
-                var target = RootMapper.Map(sourceItemType, targetItemType, source, null, mapContext);
+                if (mapper != null)
+                {
+                    target = mapper.Map(source, null, mapContext);
+                }
+                else
+                {
+                    target = RootMapper.Map(sourceItemType, targetItemType, source, null, mapContext);
+                    mapper = RootMapper.MapperBaseDicts[typePair];
+                }
                 targets.Add((TTargetItem)target);
             }
 
@@ -145,9 +179,21 @@ namespace ZK.Mapper.Mappers
                 targets = new HashSet<TTargetItem>();
             }
 
+            var typePair = TypePair.Create<TSourceItem, TTargetItem>();
+            MapperBase mapper = null;
+            object target;
             foreach (var source in sources)
             {
-                var target = RootMapper.Map(sourceItemType, targetItemType, source, null, mapContext);
+                if (mapper != null)
+                {
+                    target = mapper.Map(source, null, mapContext);
+                }
+                else
+                {
+                    target = RootMapper.Map(sourceItemType, targetItemType, source, null, mapContext);
+                    mapper = RootMapper.MapperBaseDicts[typePair];
+                }
+
                 if (target != null)
                 {
                     targets.Add((TTargetItem)target);

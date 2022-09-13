@@ -57,9 +57,21 @@ namespace ZK.Mapper.Mappers
                 targets = new Dictionary<TTargetKeyType, TTargetValueType>();
             }
 
+            var typePair = TypePair.Create<TSourceValueType, TTargetValueType>();
+            MapperBase mapper = null;
+            object targetItemValue;
             foreach (var kvp in sources)
             {
-                var targetItemValue = RootMapper.Map(sourceValueType, targetValueType, kvp.Value, null, mapContext);
+                if (mapper != null)
+                {
+                    targetItemValue = mapper.Map(kvp.Value, null, mapContext);
+                }
+                else
+                {
+                    targetItemValue = RootMapper.Map(sourceValueType, targetValueType, kvp.Value, null, mapContext);
+                    mapper = RootMapper.MapperBaseDicts[typePair];
+                }
+
                 targets[kvp.Key] = (TTargetValueType)targetItemValue;
             }
 

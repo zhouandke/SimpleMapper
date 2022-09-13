@@ -2,9 +2,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SimpleMapper.Test
 {
-    // denpend on MapperFrameTest, PrimitiveTypeMapperTest
+    // denpend on MapperFrameTest
     [TestClass]
-    public class PrimitiveTypeMapperTest
+    public class NumberTypeMapperTest
     {
         ZK.Mapper.SimpleMapper simpleMapper = new ZK.Mapper.SimpleMapper();
 
@@ -32,29 +32,6 @@ namespace SimpleMapper.Test
             Assert.IsNull(dst.Address);
         }
 
-        [TestMethod]
-        public void PrimitiveTypeEnumerableTest()
-        {
-            var src = new B
-            {
-                Ids = new long?[] { 1, (long?)null },
-                Colors = new int[] { 1, 2 },
-                Scores = new decimal?[] { (decimal?)1.1, (decimal?)null, (decimal?)3.9 }
-            };
-            var dst = simpleMapper.Map<BDto>(src);
-            Assert.AreEqual(src.Ids.Length, dst.Ids.Length);
-            Assert.AreEqual(1, dst.Ids[0]);
-            Assert.AreEqual(0, dst.Ids[1]);
-
-            Assert.AreEqual(src.Colors.Length, dst.Colors.Length);
-            Assert.AreEqual(1, dst.Colors[0]);
-            Assert.AreEqual(2, dst.Colors[1]);
-
-            Assert.AreEqual(src.Scores.Length, dst.Scores.Length);
-            Assert.AreEqual(1, dst.Scores[0]);
-            Assert.AreEqual(0, dst.Scores[1]);
-            Assert.AreEqual(3, dst.Scores[2]);
-        }
 
         public class A
         {
@@ -91,30 +68,5 @@ namespace SimpleMapper.Test
 
             public string Address { get; set; }
         }
-
-        public class B
-        {
-            public long?[] Ids { get; set; }
-
-            public int[] Colors { get; set; }
-
-            public decimal?[] Scores { get; set; }
-        }
-
-        public class BDto
-        {
-            public long[] Ids { get; set; }
-
-            public float[] Colors { get; set; }
-
-            public int[] Scores { get; set; }
-        }
-
-        public struct PointDto
-        {
-            public int X { get; set; }
-        }
     }
-
-
 }

@@ -4,13 +4,12 @@ namespace SimpleMapper.Test
 {
     // denpend on MapperFrameTest
     [TestClass]
-    public class ClassMapperTest
+    public class BasicMapperTest
     {
         ZK.Mapper.SimpleMapper simpleMapper = new ZK.Mapper.SimpleMapper();
 
-        public ClassMapperTest()
+        public BasicMapperTest()
         {
-
         }
 
         [TestMethod]
@@ -125,6 +124,4 @@ namespace SimpleMapper.Test
             public int Y { get; set; }
         }
     }
-
-
 }

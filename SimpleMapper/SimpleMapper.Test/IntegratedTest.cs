@@ -124,5 +124,49 @@ namespace SimpleMapper.Test
         {
             public int X { get; set; }
         }
+
+
+
+        [TestMethod]
+        public void NumberTypeEnumerableTest()
+        {
+            var src = new NumberTypeEnumerableClass
+            {
+                Ids = new long?[] { 1, (long?)null },
+                Colors = new int[] { 1, 2 },
+                Scores = new decimal?[] { (decimal?)1.1, (decimal?)null, (decimal?)3.9 }
+            };
+            var dst = simpleMapper.Map<NumberTypeEnumerableClassDto>(src);
+            Assert.AreEqual(src.Ids.Length, dst.Ids.Length);
+            Assert.AreEqual(1, dst.Ids[0]);
+            Assert.AreEqual(0, dst.Ids[1]);
+
+            Assert.AreEqual(src.Colors.Length, dst.Colors.Length);
+            Assert.AreEqual(1, dst.Colors[0]);
+            Assert.AreEqual(2, dst.Colors[1]);
+
+            Assert.AreEqual(src.Scores.Length, dst.Scores.Length);
+            Assert.AreEqual(1, dst.Scores[0]);
+            Assert.AreEqual(0, dst.Scores[1]);
+            Assert.AreEqual(3, dst.Scores[2]);
+        }
+
+        public class NumberTypeEnumerableClass
+        {
+            public long?[] Ids { get; set; }
+
+            public int[] Colors { get; set; }
+
+            public decimal?[] Scores { get; set; }
+        }
+
+        public class NumberTypeEnumerableClassDto
+        {
+            public long[] Ids { get; set; }
+
+            public float[] Colors { get; set; }
+
+            public int[] Scores { get; set; }
+        }
     }
 }

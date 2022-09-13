@@ -11,7 +11,7 @@ namespace ZK.Mapper.Mappers
     /// <typeparam name="TTarget"></typeparam>
     /// <typeparam name="TSourcePrimitve"></typeparam>
     /// <typeparam name="TTargetPrimitve"></typeparam>
-    internal class PrimitiveTypeMapper<TSource, TTarget, TSourcePrimitve, TTargetPrimitve> : MapperBase
+    internal class NumberTypeMapper<TSource, TTarget, TSourcePrimitve, TTargetPrimitve> : MapperBase
     {
         private static readonly Type targetType = typeof(TTarget);
         private static readonly Type targetPrimitveType = typeof(TTargetPrimitve);
@@ -19,7 +19,7 @@ namespace ZK.Mapper.Mappers
 
         private Func<TSource, TTarget> convert;
 
-        public PrimitiveTypeMapper(IRootMapper rootMapper)
+        public NumberTypeMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)
         {
             // bool 与 其他 number 类型转换确实很麻烦
@@ -87,7 +87,7 @@ namespace ZK.Mapper.Mappers
                     return null;
                 }
 
-                var type = typeof(PrimitiveTypeMapper<,,,>).MakeGenericType(typePair.SourceType, typePair.TargetType, sourcePrimitveType, targetPrimitveType);
+                var type = typeof(NumberTypeMapper<,,,>).MakeGenericType(typePair.SourceType, typePair.TargetType, sourcePrimitveType, targetPrimitveType);
                 var mapper = (MapperBase)type.GetConstructor(ImplementMapperConstructorTypes).Invoke(new object[] { RootMapper });
                 return mapper;
             }

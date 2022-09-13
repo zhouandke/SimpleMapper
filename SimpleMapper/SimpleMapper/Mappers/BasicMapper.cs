@@ -15,11 +15,19 @@ namespace ZK.Mapper.Mappers
     /// <typeparam name="TTarget"></typeparam>
     internal class BasicMapper<TSource, TTarget> : MapperBase
     {
+        #region ShallowCopy
         private readonly Func<TSource, TTarget, MapContext, TTarget> sameNameSameTypeAssign;
         private readonly Func<TSource, TTarget, MapContext, IRootMapper, TTarget> sameNameDifferentTypeAssign;
+        public readonly string[] SameNameSameTypeMembers;
+        public readonly string[] SameNameDifferentTypeMembers;
+        #endregion
 
+        #region DeepCopy
         private readonly Func<TSource, TTarget, MapContext, TTarget> directAssign;
         private readonly Func<TSource, TTarget, MapContext, IRootMapper, TTarget> mapThenAssign;
+        public readonly string[] DirectAssignMembers;
+        public readonly string[] MapThenAssignMembers;
+        #endregion
 
         public BasicMapper(IRootMapper rootMapper)
             : base(new TypePair(typeof(TSource), typeof(TTarget)), rootMapper)
@@ -71,16 +79,6 @@ namespace ZK.Mapper.Mappers
             MapThenAssignMembers = mapThenAssignMembers.Select(o => o.SourceMember.Name).ToArray();
         }
 
-        public string[] SameNameSameTypeMembers { get; }
-
-        public string[] SameNameDifferentTypeMembers { get; }
-
-
-        public string[] DirectAssignMembers { get; }
-
-        public string[] MapThenAssignMembers { get; }
-
-
         protected override object MapCore(object source, object target, MapContext mapContext)
         {
             if (source == null)
@@ -100,12 +98,11 @@ namespace ZK.Mapper.Mappers
 
             if (target == null)
             {
-                var targetParameterlessCtor = TypePair.TargetParameterlessCtor;
-                if (targetParameterlessCtor == null)
+                if (TypePair.TargetParameterlessCtor == null)
                 {
                     return target ?? default(TTarget);
                 }
-                target = targetParameterlessCtor();
+                target = TypePair.TargetParameterlessCtor();
             }
 
             return ShallowCopyGeneric((TSource)source, (TTarget)target, mapContext);
@@ -125,12 +122,11 @@ namespace ZK.Mapper.Mappers
                 return source;
             }
 
-            var targetParameterlessCtor = TypePair.TargetParameterlessCtor;
-            if (targetParameterlessCtor == null)
+            if (TypePair.TargetParameterlessCtor == null)
             {
                 return target ?? default(TTarget);
             }
-            target = targetParameterlessCtor();
+            target = TypePair.TargetParameterlessCtor();
 
             return DeepCopyGeneric((TSource)source, (TTarget)target, mapContext);
         }
